@@ -1,4 +1,3 @@
-
 	     Welcome to open SCADA system OpenSCADA.
 
 Documentation about this program you may find together this document. Usually OpenSCASA system is accompanied by next
