@@ -1,0 +1,12 @@
+language: cpp
+compiler:
+  - gcc
+  - clang
+# whitelist  
+branches:
+  only:
+    - master
+    - openscada_0.8.0
+# Change this to your needs
+# script: ./configure && make
+script: autoreconf -ivf && ./configure && make
