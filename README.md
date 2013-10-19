@@ -1,5 +1,8 @@
 	     Welcome to open SCADA system OpenSCADA.
 
+Build Status:
+- [![Build Status](https://travis-ci.org/careychow/openscada.png?branch=master)](https://travis-ci.org/careychow/openscada)
+		 
 Documentation about this program you may find together this document. Usually OpenSCASA system is accompanied by next
 documentation:
  - AboutOpenSCADA.pdf: Contain the generic information about system.
