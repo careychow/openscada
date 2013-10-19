@@ -7,6 +7,12 @@ branches:
   only:
     - master
     - openscada_0.8.0
+before_install:
+ - sudo apt-get update -qq
+ - sudo apt-get install -qq gettext zlib1g-dev libgd2-xpm-dev libpcre3 libpcre3-dev bison
+ - sudo apt-get install -qq libmysqlclient15-dev libsqlite3-dev firebird2.5-dev postgresql libpq-dev
+ - sudo apt-get install -qq libsnmp-dev portaudio19-dev
+ - sudo apt-get install -qq libqt4-dev qt4-dev-tools
 # Change this to your needs  
 before_script: autoreconf -ivf  
 script: ./configure && make
