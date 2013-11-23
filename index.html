@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Openscada by careychow</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Openscada</h1>
+        <p>Open supervisory control and data acquisition project</p>
+        <p class="view"><a href="https://github.com/careychow/openscada">View the Project on GitHub <small>careychow/openscada</small></a></p>
+        <ul>
+          <li><a href="https://github.com/careychow/openscada/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/careychow/openscada/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/careychow/openscada">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <pre><code>     Welcome to open SCADA system OpenSCADA.
+</code></pre>
+
+<p>Build Status:</p>
+
+<ul>
+<li><a href="https://travis-ci.org/careychow/openscada"><img src="https://travis-ci.org/careychow/openscada.png?branch=master" alt="Build Status"></a></li>
+</ul><p>Documentation about this program you may find together this document. Usually OpenSCASA system is accompanied by next
+documentation:</p>
+
+<ul>
+<li>AboutOpenSCADA.pdf: Contain the generic information about system.</li>
+<li>DAQ.pdf: Data acquisition conception OpenSCADA.</li>
+<li>APIOpenSCADA.pdf: Contain OpenSCADA system API for developers.</li>
+<li>FAQ.pdf: Frequently ask questions about system.</li>
+<li>Modules/*: Module's documentation directory.</li>
+<li>release_*.pdf: The release preview document for last version.</li>
+<li>openscada.pdf: Generic program description document.</li>
+</ul><p>For OpenSCADA starting you should write shell command &lt;# openscada&gt;. The system will be started in default configuration.
+This mode not have one DB configuration, but data into the configuration file enough for:</p>
+
+<ul>
+<li>working into the graphical configurator UI.QTCfg;</li>
+<li>working into WEB-configurators (adress: http://localhost:10002 or http://localhost:10004)</li>
+</ul><p>Default configuration you can use for demon mode run. For starting the system into demon(server) mode you should write shell command
+&lt;# service oscadad start&gt;.</p>
+
+<p>For first experience getting you can use OpenSCADA demo package (ModelsDB.AGLKS). This package contain DB with the system and subsystems
+configuration examples. For starting into demo configurations you should write shell command &lt;# openscada_demo&gt;.</p>
+
+<p>To create your own independent configuration SCADA-system user has a run OpenSCADAs putting data in user's home directory (~/.openscada).
+For starting user's configurations you should write shell command &lt;# openscada_start&gt;.</p>
+
+<p>For using the system you can need passwords. Default configuration have next users:</p>
+
+<ul>
+<li>root: system administrator, have password: "openscada";</li>
+<li>user: unprivileged user, have password: "user".</li>
+</ul><p>If you have some questions then apply to WWW project's site <a href="http://oscada.org">http://oscada.org</a> for more information.</p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/careychow">careychow</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
