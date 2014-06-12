@@ -38,14 +38,19 @@ TParamContr::TParamContr( const string &name, TTipParam *tpprm ) : TConfig(tpprm
     cfg("SHIFR") = mId = name;	//!! For prevent ID location change on parameter type change
     setName(name);
 
-    if(mess_lev() == TMess::Debug) SYS->cntrIter("DAQParamCntr",1);
+#if OSC_DEBUG >= 1
+    SYS->cntrIter("DAQParamCntr",1);
+#endif
 }
 
 TParamContr::~TParamContr( )
 {
     nodeDelAll();
 
-    if(mess_lev() == TMess::Debug) SYS->cntrIter("DAQParamCntr",-1);
+#if OSC_DEBUG >= 1
+    SYS->cntrIter("DAQParamCntr",-1);
+#endif
+
 }
 
 string TParamContr::objName( )	{ return TValue::objName()+":TParamContr"; }
@@ -171,37 +176,27 @@ TParamContr & TParamContr::operator=( TParamContr & PrmCntr )
 
 void TParamContr::enable()
 {
-    type().enable(this);
     m_en = true;
 }
 
 void TParamContr::disable()
 {
-    type().disable(this);
     m_en = false;
 }
 
 void TParamContr::vlGet( TVal &val )
 {
-    if(val.name() == "err")
+    if( val.name() == "err" )
     {
-	if(!enableStat()) val.setS(_("1:Parameter is disabled."),0,true);
-	else if(!owner().startStat()) val.setS(_("2:Controller is stopped."),0,true);
+	if( !enableStat() ) val.setS(_("1:Parameter is disabled."),0,true);
+	else if( !owner().startStat( ) ) val.setS(_("2:Controller is stopped."),0,true);
 	else val.setS("0",0,true);
     }
-
-    type().vlGet(this, val);
-}
-
-void TParamContr::vlSet( TVal &val, const TVariant &pvl )
-{
-    type().vlSet(this, val, pvl);
 }
 
 void TParamContr::vlArchMake( TVal &val )
 {
     if(!val.arch().freeStat())	val.arch().at().setDB(owner().DB());
-    type().vlArchMake(this, val);
 }
 
 void TParamContr::setType( const string &tpId )
@@ -238,6 +233,9 @@ void TParamContr::setType( const string &tpId )
 
 TVariant TParamContr::objFuncCall( const string &iid, vector<TVariant> &prms, const string &user )
 {
+    // TCntrNodeObj cntr() - get the controller node
+    if(iid == "cntr")	return new TCntrNodeObj(AutoHD<TCntrNode>(&owner()), user);
+
     //> Configuration functions call
     TVariant cfRez = objFunc(iid, prms, user);
     if(!cfRez.isNull()) return cfRez;
@@ -271,7 +269,6 @@ void TParamContr::cntrCmdProc( XMLNode *opt )
 	    if(ctrMkNode("area",opt,-1,"/prm/cfg",_("Configuration")))
 		TConfig::cntrCmdMake(opt,"/prm/cfg",0,"root",SDAQ_ID,RWRWR_);
 	}
-	type().cntrCmdProc(this, opt);
         return;
     }
     //> Process command to page
@@ -289,10 +286,10 @@ void TParamContr::cntrCmdProc( XMLNode *opt )
 	    else atoi(opt->text().c_str())?enable():disable();
 	}
     }
-    else if(type().cntrCmdProc(this, opt)) /* Process OK */;
-    else if(a_path.substr(0,8) == "/prm/cfg") TConfig::cntrCmdProc(opt,TSYS::pathLev(a_path,2),"root",SDAQ_ID,RWRWR_);
+    else if(a_path.compare(0,8,"/prm/cfg") == 0) TConfig::cntrCmdProc(opt,TSYS::pathLev(a_path,2),"root",SDAQ_ID,RWRWR_);
     else if(a_path == "/prm/tmplList" && ctrChkNode(opt))
     {
+	opt->childAdd("el")->setText("");
         vector<string> lls, ls;
 	SYS->daq().at().tmplLibList(lls);
 	for(unsigned i_l = 0; i_l < lls.size(); i_l++)

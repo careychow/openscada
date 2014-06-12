@@ -43,9 +43,6 @@ msgstr "Einschalten"
 msgid "Program"
 msgstr "Programm"
 
-msgid "Date of modification"
-msgstr "Änderungsdatum"
-
 msgid "Search and create new user page error."
 msgstr "Fehler der Suche und  das Schaffen einer neuen Nutzersseite."
 

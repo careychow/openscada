@@ -194,19 +194,18 @@ class OrigDocument : public PrWidget
     protected:
 	//Methods
 	void postEnable( int flag );
-	void disable( Widget *base );
+	void calc( Widget *base );
 	bool attrChange( Attr &cfg, TVariant prev );
 	bool cntrCmdAttributes( XMLNode *opt, Widget *src = NULL );
 	void sizeUpdate( SessWdg *sw );
 	TVariant objFuncCall_w( const string &id, vector<TVariant> &prms, const string &user, Widget *src = NULL );
 
-	static string makeDoc( const string &tmpl, Widget *wdg );
-	static void nodeProcess( Widget *wdg, XMLNode *xcur, TValFunc &funcV, TFunction &funcIO, const string &iLang, bool instrDel = false, time_t upTo = 0 );
-	static void nodeClear( XMLNode *xcur );
+	string makeDoc( const string &tmpl, Widget *wdg );
+	void nodeProcess( Widget *wdg, XMLNode *xcur, TValFunc &funcV, TFunction &funcIO, const string &iLang, bool instrDel = false, time_t upTo = 0 );
+	void nodeClear( XMLNode *xcur );
 
 	//Attributes
 	static const char *XHTML_entity;
-	static void *DocTask( void *param );
 };
 
 //************************************************

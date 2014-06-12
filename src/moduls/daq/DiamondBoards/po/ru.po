@@ -1,245 +1,176 @@
 # OpenSCADA.DAQ.DiamondBoards translate to Russian.
-# Copyright (C) 2005-2013 Roman Savochenko
+# Copyright (C) 2005-2010 Roman Savochenko
 # This file is distributed under the same license as the OpenSCADA.DAQ.DiamondBoards package module.
 #
-# Roman Savochenko <rom_as@fromru.com>, 2005-2013.
+# Roman Savochenko <rom_as@fromru.com>, 2005-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: OpenSCADA.DAQ.DiamondBoards 2.0.0\n"
+"Project-Id-Version: OpenSCADA.DAQ.DiamondBoards 1.2.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-06-25 20:30+0300\n"
+"POT-Creation-Date: 2011-04-04 17:24+0300\n"
 "PO-Revision-Date: 2007-10-28 09:43+0200\n"
 "Last-Translator: Roman Savochenko <rom_as@fromru.com>\n"
-"Language-Team: Russian <ru@li.org>\n"
+"Language-Team: LANGUAGE <ru@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid "Diamond DAQ boards"
-msgstr "Diamond DAQ платы"
+msgid "Diamond DA boards"
+msgstr "Diamond платы сбора данных"
 
 msgid "Roman Savochenko"
 msgstr "Роман Савоченко"
 
 msgid ""
-"Allow access to 'Diamond Systems' DAQ boards. Include main support for "
-"generic boards."
+"Allow access to Diamond systems DA boards. Include support of Athena board."
 msgstr ""
-"Предоставляет доступ к 'Diamond Systems' DAQ платам. Включает основную "
-"поддержку базовых плат."
-
-msgid ""
-"[-5, +5]V;[-2.5, +2.5]V;[-1.25, +1.25]V;[-10, +10]V;[-5, +5]V;[-2.5, +2.5]V;"
-"[-1.25, +1.25]V;[0, 10]V;[0, 5]V;[0, 2.5]V"
-msgstr ""
-"[-5, +5]В;[-2.5, +2.5]В;[-1.25, +1.25]В;[-10, +10]В;[-5, +5]В;[-2.5, +2.5]В;"
-"[-1.25, +1.25]В;[0, 10]В;[0, 5]В;[0, 2.5]В"
-
-msgid ""
-"[-10, +10]V;[-5, +5]V;[-2.5, +2.5]V;[-1, +1]V;[-0.5, +0.5]V;+-Custom;[0, 10]"
-"V;[0, 5]V;[0, 2]V;[0, 1]V;+Custom"
-msgstr ""
-"[-10, +10]В;[-5, +5]В;[-2.5, +2.5]В;[-1, +1]В;[-0.5, +0.5]В;+-Пользоват.;[0, "
-"10]В;[0, 5]В;[0, 2]В;[0, 1]В;+Пользоват."
-
-msgid ""
-"[-5, +5]V;[-2.5, +2.5]V;[-1.25, +1.25]V;[-0.625, +0.625]V;[-10, +10]V;[-5, "
-"+5]V;[-2.5, +2.5]V;[-1.25, +1.25]V;[0, 10]V;[0, 5]V;[0, 2.5]V;[0, 1.25]V"
-msgstr ""
-"[-5, +5]В;[-2.5, +2.5]В;[-1.25, +1.25]В;[-0.625, +0.625]В;[-10, +10]В;[-5, "
-"+5]В;[-2.5, +2.5]В;[-1.25, +1.25]В;[0, 10]В;[0, 5]В;[0, 2.5]В;[0, 1.25]В"
-
-msgid ""
-"[-5, +5]V;[-2.5, +2.5]V;[-1.25, +1.25]V;[-0.625, +0.625]V;[0, 10]V;[0, 5]V;"
-"[0, 2.5]V;[0, 1.25]V;[-10, +10]V;[-5, +5]V;[-2.5, +2.5]V;[-1.25, +1.25]V"
-msgstr ""
-"[-5, +5]В;[-2.5, +2.5]В;[-1.25, +1.25]В;[-0.625, +0.625]В;[0, 10]В;[0, 5]В;"
-"[0, 2.5]В;[0, 1.25]В;[-10, +10]В;[-5, +5]В;[-2.5, +2.5]В;[-1.25, +1.25]В"
-
-msgid ""
-"[-10, +10]V;[-5, +5]V;[-2.5, +2.5]V;[-1.25, +1.25]V;[-10, +10]V;[-5, +5]V;"
-"[-2.5, +2.5]V;[-1.25, +1.25]V;[0, 8.3]V;[0, 5]V;[0, 2.5]V"
-msgstr ""
-"[-10, +10]В;[-5, +5]В;[-2.5, +2.5]В;[-1.25, +1.25]В;[-10, +10]В;[-5, +5]В;"
-"[-2.5, +2.5]В;[-1.25, +1.25]В;[0, 8.3]В;[0, 5]В;[0, 2.5]В"
-
-msgid ""
-"[-10, +10]V;[-5, +5]V;[-2.5, +2.5]V;[-1.25, +1.25]V;[0, 10]V;[0, 5]V;[0, 2.5]"
-"V;[0, 1.25]V"
-msgstr ""
-"[-10, +10]В;[-5, +5]В;[-2.5, +2.5]В;[-1.25, +1.25]В;[0, 10]В;[0, 5]В;[0, 2.5]"
-"В;[0, 1.25]В"
-
-msgid "[0, 5]V;[0, 10]V;[-2.5, +2.5]V;[-5, +5]V;[-10, +10]V"
-msgstr "[0, 5]В;[0, 10]В;[-2.5, +2.5]В;[-5, +5]В;[-10, +10]В"
+"Предоставляет доступ к платам сбора данных фирмы Diamond systems. Включает "
+"поддержку системной платы Athena."
 
 msgid "dscInit error."
 msgstr "Ошибка dscInit."
 
-msgid "Parameteres table"
-msgstr "Таблица параметров"
+msgid "Diamond system board"
+msgstr "Diamond плата"
 
-msgid "Acquisition schedule"
-msgstr "Планирование опроса"
+msgid "Analog parameters' table"
+msgstr "Таблица аналоговых параметров"
 
-msgid "Gather task priority"
-msgstr "Приоритет задачи сбора"
+msgid "Digital parameters' table"
+msgstr "Таблица дискретных параметров"
 
-msgid "Standard"
-msgstr "Стандарт"
+msgid "Data emulation"
+msgstr "Эмуляция данных"
 
-msgid "Board: type"
-msgstr "Плата: тип"
+msgid "Base board address"
+msgstr "Базовый адрес платы"
 
-msgid "Board: address"
-msgstr "Плата: адрес"
+msgid "Interrupt vector"
+msgstr "Вектор прерывания"
 
-msgid "Board: interrupt"
-msgstr "Плата: прерывание"
+msgid "Digit IO configuration byte"
+msgstr "Конфигурационный байт дискретных IO"
 
-msgid "Sample rate (single channel)"
-msgstr "Частота измерений (один канал)"
+msgid "A/D interrupt mode"
+msgstr "Сбор AI по прерыванию"
 
-msgid "Asynchronous read"
-msgstr "Асинхронное чтение"
+msgid "A/D voltage range"
+msgstr "Диапазон напряжений AI"
 
-msgid "AI value mode"
-msgstr "Режим значения AI"
+msgid "5v;10v"
+msgstr "5В;10В"
 
-msgid "Code;%;Voltage"
-msgstr "Код;%;Напряжение"
+msgid "A/D polarity"
+msgstr "Полярность AI"
 
-msgid "Addition parameters"
-msgstr "Дополнительные параметры"
+msgid "Bipolar;Unipolar"
+msgstr "Биполярный;Однополярный"
 
-msgid "Call now. "
-msgstr "Вызов сейчас. "
+msgid "A/D gain"
+msgstr "Усиление по AI"
 
-#, c-format
-msgid "Call by period: %s. "
-msgstr "Вызовы с периодом: %s. "
+msgid "A/D conversion rate (Hz)"
+msgstr "Частота сбора по одному каналу AI (Гц)"
 
-#, c-format
-msgid "Call next by cron '%s'. "
-msgstr "Следующий вызов по cron '%s'. "
+msgid "Analog parameter"
+msgstr "Аналоговый параметр"
 
-#, c-format
-msgid "Spent time: %s. "
-msgstr "Затрачено времени: %s. "
+msgid "Analog parameter type"
+msgstr "Тип аналогового параметра"
 
-msgid "1:Parameter is disabled."
-msgstr "1:Параметр отключен."
+msgid "Input;Output"
+msgstr "Вход;Выход"
 
-msgid "2:Acquisition is stopped."
-msgstr "2:Опрос остановлен."
+msgid "Channel"
+msgstr "Канал"
 
-msgid ""
-"0:AI acquisition into interrupt mode; SampleRate=%g; Drift=%gs; Overflows="
-"%u; LostCycles=%u; SRateCor=%u."
-msgstr "0:Опрос AI по прерыванию, SampleRate=%g; Drift=%gc; Overflows="
-"%u; LostCycles=%u; SRateCor=%u."
+msgid "A/D converter gain"
+msgstr "Усиление A/D конвертера"
+
+msgid "Digital parameter"
+msgstr "Дискретный параметр"
+
+msgid "Digital parameter type"
+msgstr "Тип дискретного параметра"
+
+msgid "Port"
+msgstr "Порт"
+
+msgid "Value %"
+msgstr "Значение %"
+
+msgid "Voltage V"
+msgstr "Напряжение, В"
+
+msgid "A/D code"
+msgstr "A/D код"
+
+msgid "Value"
+msgstr "Значение"
 
 msgid "DSC driver is not initialized!"
 msgstr "DSC драйвер не инициализирован!"
 
 #, c-format
-msgid "Select device %d error!"
-msgstr "Ошибка выбора устройства %d!"
+msgid "dscInitBoard %d(%xh) error: %s %s"
+msgstr "Ошибка dscInitBoard %d(%xh): %s %s"
 
 #, c-format
-msgid "dscInitBoard '%s'(%xh) error: %s %s"
-msgstr "Ошибка dscInitBoard '%s'(%xh): %s %s"
+msgid "dscDIOSetConfig error: %s %s"
+msgstr "Ошибка dscDIOSetConfig: %s %s"
 
 #, c-format
-msgid "Analog input %d"
-msgstr "Аналоговый вход %d"
+msgid "dscADSetSettings error: %s %s"
+msgstr "Ошибка dscADSetSettings: %s %s"
 
 #, c-format
-msgid "Analog output %d"
-msgstr "Аналоговый выход %d"
+msgid "dscADScanInt error: %s %s"
+msgstr "Ошибка dscADScanInt: %s %s"
 
-#, c-format
-msgid "Board's '%s' DIO configuration unsupported."
-msgstr "Не поддерживается конфигурация DIO платы '%s'."
-
-#, c-format
-msgid "Digital out %d.%d"
-msgstr "Дискретный выход %d.%d"
-
-#, c-format
-msgid "Digital input %d.%d"
-msgstr "Дискретный вход %d.%d"
-
-#, c-format
-msgid ""
-"AI interrupt: Init for: ConvRate=%g; NumbConv=%lu; FIFOdepth=%d; "
-"dump_threshold=%lu; scan_interval=%d."
+msgid "DSC card's counter run from system time is corrected."
 msgstr ""
-"Прерывание AI: Иниц. для: ConvRate=%g; NumbConv=%lu; FIFOdepth=%d; "
-"dump_threshold=%lu; scan_interval=%d."
+"Выполнена коррекция отклонения счётчика DSC карты от системного времени."
+
+msgid "AD DSC task error."
+msgstr "Ошибка в задаче DSC."
+
+msgid "Board configuration"
+msgstr "Конфигурация платы"
+
+msgid "Digital IO ports. Select input!"
+msgstr "Дискретные IO порты. Входы выбраны!"
+
+msgid "Port A"
+msgstr "Порт A"
+
+msgid "Port B"
+msgstr "Порт B"
+
+msgid "Port C1"
+msgstr "Порт C1"
+
+msgid "Port C2"
+msgstr "Порт C2"
 
 #, c-format
-msgid "Interrupt mode disabled by dscADScanInt error: %s %s"
-msgstr "Режим работы по прерыванию отключен по ошибке dscADScanInt: %s %s"
-
-msgid ""
-"AI interrupt: Cycle: ConvRate=%g; transfers=%lu; prev_transfers=%lu; "
-"total_transfers=%lu; overflows=%lu; lag=%lld; drift=%gs."
-msgstr ""
-"Прерывание AI: Цикл: ConvRate=%g; transfers=%lu; prev_transfers=%lu; "
-"total_transfers=%lu; overflows=%lu; lag=%lld; drift=%gc."
-
-msgid "AI interrupt: Overflows '%d' corrected to %lld! Drift=%gs."
-msgstr "Прерывание AI: Переполнения '%d' скорректированы в %lld! Drift=%gс."
-
-msgid "AI interrupt: Lost cycles '%d'. Fast data time corrected! Drift=%gs."
-msgstr "Прерывание AI: Потеря циклов '%d'. Время быстрых данных откорректировано! Drift=%gs."
-
-msgid "AI interrupt: Correction: dt=%gs; dtSz=%lld; per=%d; crmult=%g."
-msgstr "Прерывание AI: Коррекция: dt=%gs; dtSz=%lld; per=%d; crmult=%g."
+msgid "dscDAConvert error: %s %s"
+msgstr "Ошибка dscDAConvert: %s %s"
 
 #, c-format
-msgid "AI interrupt: Sample rate change to %g! Env: drift=%gs."
-msgstr "Прерывание AI: Частота выборки изменена в %g! Окруж.: drift=%gс."
+msgid "dscDIOOutputBit error: %s %s"
+msgstr "Ошибка dscDIOOutputBit: %s %s"
 
-msgid "AI numbers process"
-msgstr "Количество обрабатываемых AI"
+msgid "2:Controller is stopped"
+msgstr "2:Контроллер остановлен"
 
-msgid "Configuration"
-msgstr "Конфигурация"
-
-msgid "Analog inputs scan interval (us)"
-msgstr "Интервал сканирования аналоговых входов (мкс)"
+msgid "1:Parameter is disabled"
+msgstr "1:Параметр отключен"
 
 #, c-format
-msgid "Input %d type (all inputs)"
-msgstr "Вход %d: тип (все входы)"
+msgid "dscADSample error: %s %s"
+msgstr "Ошибка dscADSample: %s %s"
 
 #, c-format
-msgid "Input %d type"
-msgstr "Вход %d: тип"
-
-#, c-format
-msgid "Output %d type"
-msgstr "Выход %d: тип"
-
-#, c-format
-msgid "DIO %d: out"
-msgstr "DIO %d: выход"
-
-#, c-format
-msgid "DIO %d: reverse"
-msgstr "DIO %d: инверсия"
-
-#, c-format
-msgid "DI %d reverse"
-msgstr "DI %d: инверсия"
-
-#, c-format
-msgid "DO %d reverse"
-msgstr "DO %d: инверсия"
-
-#, c-format
-msgid "%s error: %s %s"
-msgstr "Ошибка %s: %s %s"
+msgid "dscDIOInputBit error: %s %s"
+msgstr "Ошибка dscDIOInputBit: %s %s"

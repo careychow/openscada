@@ -29,7 +29,7 @@
 
 #include <tsys.h>
 
-#include "libOPC_UA.h"
+#include "libOPC_UA/libOPC_UA.h"
 
 #undef _
 #define _(mess) mod->I18N(mess)
@@ -37,7 +37,7 @@
 using std::string;
 using std::vector;
 using namespace OSCADA;
-using namespace OSCADA_OPC;
+using namespace OPC;
 
 //*************************************************
 //* DAQ modul info!                               *
@@ -65,6 +65,9 @@ class TMdPrm : public TParamContr
 	TMdPrm( string name, TTipParam *tp_prm );
 	~TMdPrm( );
 
+	string ndList( )			{ return cfg("ND_LS").getS(); }
+	void setNdList( const string &vl )	{ cfg("ND_LS").setS(vl); }
+
 	TElem &elem( )		{ return p_el; }
 
 	void enable( );
@@ -85,9 +88,9 @@ class TMdPrm : public TParamContr
 	//Methods
 	void postEnable( int flag );
 	void cntrCmdProc( XMLNode *opt );
-	void vlArchMake( TVal &val );
-	void vlGet( TVal &val );
-	void vlSet( TVal &val, const TVariant &pvl );
+	void vlGet( TVal &vo );
+	void vlSet( TVal &vo, const TVariant &vl, const TVariant &pvl );
+	void vlArchMake( TVal &vo );
 
 	//Attributes
 	TElem	p_el;			//Work atribute elements
@@ -117,6 +120,7 @@ class TMdContr: public TController, public Client
 	int	secMessMode( )	{ return mSecMessMode; }
 	string	cert( )		{ return mCert; }
 	string	pvKey( )	{ return mPvKey; }
+	string	authData( );
 	int	pAttrLim( )	{ return mPAttrLim; }
 	string	epParse( string *uri = NULL );
 
@@ -130,11 +134,11 @@ class TMdContr: public TController, public Client
 
 	Res &nodeRes( )		{ return cntrRes; }
 
-	//OPC_UA Client methods
+	// OPC_UA Client methods
 	string sessionName( )	{ return "OpenSCADA station "+SYS->id(); }
 	void protIO( XML_N &io );
-	int messIO( const char *obuf, int len_ob, char *ibuf = NULL, int len_ib = 0, int time = 0, bool noRes = false );
-	void debugMess( const string &mess, const string &data );
+	int messIO( const char *obuf, int len_ob, char *ibuf = NULL, int len_ib = 0 );
+	void debugMess( const string &mess );
 
     protected:
 	//Methods
@@ -154,7 +158,7 @@ class TMdContr: public TController, public Client
 	static void *Task( void *icntr );
 
 	//Attributes
-	Res	en_res;		//Resource for enable params
+	Res	enRes, cntrRes;	//Resource for enable params
 	TCfg	&mSched,	//Schedule
 		&mPrior,	//Process task priority
 		&mSync,		//Synchronization inter remote station: attributes list update.
@@ -162,14 +166,15 @@ class TMdContr: public TController, public Client
 		&mSecPol,	//Security policy
 		&mSecMessMode,	//Security policy mode
 		&mCert,		//Client certificate
-		&mPvKey;	//Client certificate's private key
+		&mPvKey,	//Client certificate's private key
+		&mAuthUser, &mAuthPass;	//Auth user and password
 	int	&mPAttrLim;	//Parameter attributes number limit
 	int64_t	mPer;
 
-	bool	prc_st,		//Process task active
-		call_st,        //Calc now stat
-		endrun_req,	//Request to stop of the Process task
+	bool	prcSt,		//Process task active
+		callSt,		//Calc now stat
 		mPCfgCh;	//Parameter's configuration is changed
+	int8_t	alSt;		//Alarm state
 
 	AutoHD<TTransportOut>	tr;
 	vector< AutoHD<TMdPrm> > p_hd;
@@ -183,7 +188,6 @@ class TMdContr: public TController, public Client
 	float		tmDelay;	//Delay time for next try connect
 
 	uint32_t	servSt;
-	Res		cntrRes;
 };
 
 //*************************************************

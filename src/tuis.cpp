@@ -26,7 +26,7 @@
 #include "tmess.h"
 #include "tuis.h"
 
-#if HAVE_GD_H
+#if HAVE_GD_CORE
 #include <gd.h>
 #endif
 
@@ -37,7 +37,7 @@ using namespace OSCADA;
 //*************************************************
 TUIS::TUIS( ) : TSubSYS(SUI_ID,_("User interfaces"),true)
 {
-#if HAVE_GD_H
+#if HAVE_GD_CORE
     gdFTUseFontConfig(1);
 #endif
 }
@@ -58,43 +58,62 @@ void TUIS::load_( )
     //> Load parameters from config-file
 }
 
-void TUIS::subStart( )
+void TUIS::subStart(  )
 {
-    mess_info(nodePath().c_str(), _("Start subsystem."));
+#if OSC_DEBUG >= 1
+    mess_debug(nodePath().c_str(),_("Start subsystem."));
+#endif
 
     TSubSYS::subStart( );
 }
 
 void TUIS::subStop( )
 {
-    mess_info(nodePath().c_str(), _("Stop subsystem."));
+#if OSC_DEBUG >=1
+    mess_debug(nodePath().c_str(),_("Stop subsystem."));
+#endif
 
     TSubSYS::subStop( );
 }
 
-string TUIS::icoGet( const string &inm, string *tp, bool retPath )
+bool TUIS::icoPresent(const string &inm, string *tp)
 {
+    int hd = open(icoPath(inm).c_str(),O_RDONLY);
+    if( hd != -1 )
+    {
+	if( tp ) *tp = "png";
+	close(hd);
+	return true;
+    }
+    return false;
+}
+
+string TUIS::icoGet(const string &inm, string *tp )
+{
+    int len, hd = -1;
     unsigned i_t;
-    int hd = -1;
-    string rez, pathi;
+    char buf[STR_BUF_LEN];
+    string rez;
     char types[][5] = {"png","gif","jpg","jpeg"};
 
-    for(int off = 0; hd == -1 && (pathi=TSYS::strParse(SYS->icoDir(),0,";",&off)).size(); )
-	for(i_t = 0; i_t < sizeof(types)/5; i_t++)
-	    if((hd=open((pathi+"/"+inm+"."+types[i_t]).c_str(),O_RDONLY)) != -1) break;
+    for(i_t = 0; i_t < sizeof(types)/5; i_t++)
+    {
+	hd = open(icoPath(inm,types[i_t]).c_str(),O_RDONLY);
+	if(hd != -1) break;
+    }
     if(hd != -1)
     {
 	if(tp) *tp = types[i_t];
-	if(retPath) rez = pathi+"/"+inm+"."+types[i_t];
-	else
-	{
-	    char buf[STR_BUF_LEN];
-	    for(int len = 0; (len=read(hd,buf,sizeof(buf))) > 0; ) rez.append(buf,len);
-	}
+	while((len=read(hd,buf,sizeof(buf))) > 0) rez.append(buf,len);
 	close(hd);
     }
 
     return rez;
+}
+
+string TUIS::icoPath( const string &ico, const string &tp )
+{
+    return SYS->icoDir()+"/"+ico+"."+tp;
 }
 
 void TUIS::cntrCmdProc( XMLNode *opt )

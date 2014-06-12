@@ -1,1 +1,1 @@
-debian/tmp/usr/share/openscada/LibsDB/vca*.db
+data/LibsDB/vca*.db /var/spool/openscada/LibsDB

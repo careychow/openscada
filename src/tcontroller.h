@@ -77,7 +77,6 @@ class TController : public TCntrNode, public TConfig
 	bool toStart( )		{ return mAStart; }
 	bool enableStat( )	{ return en_st; }
 	bool startStat( )	{ return run_st; }
-	int  messLev( )		{ return mMessLev; }
 
 	void start( );
 	void stop( );
@@ -100,7 +99,6 @@ class TController : public TCntrNode, public TConfig
 	void setRedntRun( const string &vl );
 	virtual void redntDataUpdate( );
 
-	virtual string catsPat( );	//Individual the controller messages' categories pattern
 	void alarmSet( const string &mess, int lev = -TMess::Crit, const string &prm = "" );
 
 	TTipDAQ &owner( );
@@ -134,10 +132,10 @@ class TController : public TCntrNode, public TConfig
 	//Private methods
 	const char *nodeName( )	{ return mId.getSd(); }
 
-	void LoadParmCfg(  );
+	void LoadParmCfg( );
 
 	//Private attributes
-	TCfg	&mId, &mMessLev;
+	TCfg	&mId;
 	char	&mAEn, &mAStart;
 
 	string	mDB;

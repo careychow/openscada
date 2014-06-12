@@ -1,7 +1,7 @@
 
 //OpenSCADA system module Special.FLibSYS file: varchfnc.h
 /***************************************************************************
- *   Copyright (C) 2009 by Roman Savochenko                                *
+ *   Copyright (C) 2009-2014 by Roman Savochenko                           *
  *   rom_as@oscada.org, rom_as@fromru.com                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -39,7 +39,7 @@ class VArchObj : public TVarObj
 	VArchObj( );
 	~VArchObj( );
 
-	string objName( )       { return "arch"; }
+	string objName( )	{ return "arch"; }
 
 	bool open( const string &inm );
 	bool open( TFld::Type vtp, int isz, int ipr, bool ihgrd, bool ihres );
@@ -71,8 +71,8 @@ class vArh : public TFunction
     public:
 	vArh( ) : TFunction("vArh",SSPC_ID)
 	{
-	    ioAdd( new IO("res",_("Result"),IO::Object,IO::Return) );
-	    ioAdd( new IO("name",_("Name"),IO::String,IO::Default) );
+	    ioAdd(new IO("res",_("Result"),IO::Object,IO::Return));
+	    ioAdd(new IO("name",_("Name"),IO::String,IO::Default));
 	}
 
 	string name( )  { return _("Val: Archive"); }
@@ -92,14 +92,14 @@ class vArh : public TFunction
 class vArhBuf : public TFunction
 {
     public:
-	vArhBuf( ) : TFunction("vArhBuf",SSPC_ID)
+	vArhBuf( ) : TFunction("vArhBuf", SSPC_ID)
 	{
-	    ioAdd( new IO("res",_("Result"),IO::Object,IO::Return) );
-	    ioAdd( new IO("tp",_("Type"),IO::Integer,IO::Default,"1") );
-	    ioAdd( new IO("sz",_("Size"),IO::Integer,IO::Default,"100") );
-	    ioAdd( new IO("per",_("Period (us)"),IO::Integer,IO::Default,"1000000") );
-	    ioAdd( new IO("hgrd",_("Hard grid"),IO::Boolean,IO::Default,"0") );
-	    ioAdd( new IO("hres",_("High resolution"),IO::Boolean,IO::Default,"0") );
+	    ioAdd(new IO("res",_("Result"),IO::Object,IO::Return));
+	    ioAdd(new IO("tp",_("Type"),IO::Integer,IO::Default,"1"));
+	    ioAdd(new IO("sz",_("Size"),IO::Integer,IO::Default,"100"));
+	    ioAdd(new IO("per",_("Period (us)"),IO::Integer,IO::Default,"1000000"));
+	    ioAdd(new IO("hgrd",_("Hard grid"),IO::Boolean,IO::Default,"0"));
+	    ioAdd(new IO("hres",_("High resolution"),IO::Boolean,IO::Default,"0"));
 	}
 
 	string name( )  { return _("Val: Archive buffer"); }

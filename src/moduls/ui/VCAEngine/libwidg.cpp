@@ -283,7 +283,7 @@ bool WidgetLib::mimeDataGet( const string &iid, string &mimeType, string *mimeDa
 	while((len=read(hd,buf,sizeof(buf))) > 0) rez.append(buf,len);
 	close(hd);
 
-	mimeType = ((filepath.rfind(".") != string::npos) ? filepath.substr(filepath.rfind(".")+1)+";" : "file/unknown;")+TSYS::int2str(rez.size());
+	mimeType = ((filepath.rfind(".") != string::npos) ? filepath.substr(filepath.rfind(".")+1)+";" : "file/unknown;")+i2s(rez.size());
 	if(mimeData) *mimeData = TSYS::strEncode(rez,TSYS::base64);
 
 	return true;
@@ -349,12 +349,11 @@ void WidgetLib::cntrCmdProc( XMLNode *opt )
 		ctrMkNode("fld",opt,-1,"/obj/st/db",_("Library DB"),RWRWR_,"root",SUI_ID,4,
 		    "tp","str","dest","sel_ed","select",("/db/tblList:wlb_"+id()).c_str(),
 		    "help",_("DB address in format [<DB module>.<DB name>.<Table name>].\nFor use main work DB set '*.*'."));
-		ctrMkNode("fld",opt,-1,"/obj/st/timestamp",_("Date of modification"),R_R_R_,"root",SUI_ID,1,"tp","time");
 	    }
 	    if(ctrMkNode("area",opt,-1,"/obj/cfg",_("Configuration")))
 	    {
 		ctrMkNode("fld",opt,-1,"/obj/cfg/id",_("Id"),R_R_R_,"root",SUI_ID,1,"tp","str");
-		ctrMkNode("fld",opt,-1,"/obj/cfg/name",_("Name"),RWRWR_,"root",SUI_ID,2,"tp","str","len","50");
+		ctrMkNode("fld",opt,-1,"/obj/cfg/name",_("Name"),RWRWR_,"root",SUI_ID,2,"tp","str","len",OBJ_NM_SZ);
 		ctrMkNode("fld",opt,-1,"/obj/cfg/descr",_("Description"),RWRWR_,"root",SUI_ID,3,"tp","str","cols","100","rows","3");
 		ctrMkNode("img",opt,-1,"/obj/cfg/ico",_("Icon"),RWRWR_,"root",SUI_ID,2,"v_sz","64","h_sz","64");
 	    }
@@ -375,21 +374,13 @@ void WidgetLib::cntrCmdProc( XMLNode *opt )
     string a_path = opt->attr("path");
     if(a_path == "/obj/st/en")
     {
-	if(ctrChkNode(opt,"get",RWRWR_,"root",SUI_ID,SEC_RD))	opt->setText(TSYS::int2str(enable()));
+	if(ctrChkNode(opt,"get",RWRWR_,"root",SUI_ID,SEC_RD))	opt->setText(i2s(enable()));
 	if(ctrChkNode(opt,"set",RWRWR_,"root",SUI_ID,SEC_WR))	setEnable(atoi(opt->text().c_str()));
     }
     else if(a_path == "/obj/st/db")
     {
 	if(ctrChkNode(opt,"get",RWRWR_,"root",SUI_ID,SEC_RD))	opt->setText(fullDB());
 	if(ctrChkNode(opt,"set",RWRWR_,"root",SUI_ID,SEC_WR))	setFullDB(opt->text());
-    }
-    else if(a_path == "/obj/st/timestamp" && ctrChkNode(opt))
-    {
-        vector<string> tls;
-        list(tls);
-        time_t maxTm = 0;
-        for(int i_t = 0; i_t < tls.size(); i_t++) maxTm = vmax(maxTm, at(tls[i_t]).at().timeStamp());
-        opt->setText(TSYS::int2str(maxTm));
     }
     else if(a_path == "/obj/cfg/ico" || a_path == "/ico")
     {
@@ -420,6 +411,7 @@ void WidgetLib::cntrCmdProc( XMLNode *opt )
 	{
 	    string vid = TSYS::strEncode(opt->attr("id"),TSYS::oscdID);
 	    add(vid,opt->text().c_str()); at(vid).at().setOwner(opt->attr("user"));
+	    opt->setAttr("id", vid);
 	}
 	if(ctrChkNode(opt,"del",RWRWR_,"root",SUI_ID,SEC_WR)) del(opt->attr("id"),true);
     }
@@ -485,7 +477,7 @@ void WidgetLib::cntrCmdProc( XMLNode *opt )
 		    if(extP == string::npos || extP == 0 || extP == (idmime.size()-1)) mimeType = "media/unknown";
 		    else { mimeType = "media/"+idmime.substr(extP+1); idmime = idmime.substr(0,extP); }
 		}
-		mimeDataSet(idmime, TSYS::strSepParse(mimeType,0,';')+";"+TSYS::real2str((float)opt->text().size()/1024,6),opt->text());
+		mimeDataSet(idmime, TSYS::strSepParse(mimeType,0,';')+";"+r2s((float)opt->text().size()/1024,6),opt->text());
 	    }
 	}
     }
@@ -496,12 +488,11 @@ void WidgetLib::cntrCmdProc( XMLNode *opt )
 //* LWidget: Library stored widget               *
 //************************************************
 LWidget::LWidget( const string &iid, const string &isrcwdg ) :
-	Widget(iid), TConfig(&mod->elWdg()), enableByNeed(false), m_proc_per(cfg("PROC_PER").getId()), mTimeStamp(cfg("TIMESTAMP").getId())
+	Widget(iid), TConfig(&mod->elWdg()), enableByNeed(false), m_proc_per(cfg("PROC_PER").getId())
 {
     cfg("ID").setS(id());
 
     setParentNm(isrcwdg);
-    setNodeFlg(TCntrNode::SelfSaveForceOnChild);
 }
 
 LWidget::~LWidget( )
@@ -736,8 +727,7 @@ void LWidget::save_( )
     cfg("ATTRS").setS(mod->attrsSave(*this, db+"."+tbl, id(), "", true));
 
     //> Save generic widget's data
-    mTimeStamp = SYS->sysTm();
-    SYS->db().at().dataSet(db+"."+tbl, mod->nodePath()+tbl, *this);
+    SYS->db().at().dataSet( db+"."+tbl, mod->nodePath()+tbl, *this );
 
     //> Save widget's attributes
     saveIO();
@@ -832,16 +822,14 @@ void LWidget::cntrCmdProc( XMLNode *opt )
     if(opt->name() == "info")
     {
 	cntrCmdGeneric(opt);
-	ctrMkNode("fld",opt,-1,"/wdg/st/timestamp",_("Date of modification"),R_R_R_,"root",SUI_ID,1,"tp","time");
 	cntrCmdAttributes(opt );
 	cntrCmdLinks(opt);
 	cntrCmdProcess(opt);
 	ctrMkNode("oscada_cntr",opt,-1,"/",_("Library widget: ")+id());
 	return;
     }
-    if(cntrCmdGeneric(opt) || cntrCmdAttributes(opt) || cntrCmdLinks(opt) || cntrCmdProcess(opt)) ;
-    else if(opt->attr("path") == "/wdg/st/timestamp" && ctrChkNode(opt)) opt->setText(TSYS::int2str(timeStamp()));
-    else TCntrNode::cntrCmdProc(opt);
+    if(!(cntrCmdGeneric(opt) || cntrCmdAttributes(opt) || cntrCmdLinks(opt) || cntrCmdProcess(opt)))
+	TCntrNode::cntrCmdProc(opt);
 }
 
 //************************************************

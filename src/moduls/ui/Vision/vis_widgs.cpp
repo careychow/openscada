@@ -1,7 +1,7 @@
 
 //OpenSCADA system module UI.Vision file: vis_widgs.cpp
 /***************************************************************************
- *   Copyright (C) 2007-2008 by Roman Savochenko                           *
+ *   Copyright (C) 2007-2014 by Roman Savochenko                           *
  *   rom_as@diyaorg.dp.ua                                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -45,11 +45,13 @@
 
 #include <tsys.h>
 
+#include "../VCAEngine/types.h"
 #include "vis_shapes.h"
 #include "vis_widgs.h"
 #include "vis_run_widgs.h"
 
 using namespace VISION;
+using namespace VCA;
 
 //*************************************************
 //* Id and name input dialog                      *
@@ -111,11 +113,11 @@ InputDlg::InputDlg( QWidget *parent, const QIcon &icon, const QString &mess, con
 						      QDialogButtonBox::Cancel, Qt::Horizontal, this );
     QImage ico_t;
     but_box->button(QDialogButtonBox::Ok)->setText(_("Ok"));
-    if(!ico_t.load(TUIS::icoGet("button_ok",NULL,true).c_str())) ico_t.load(":/images/button_ok.png");
+    if(!ico_t.load(TUIS::icoPath("button_ok").c_str())) ico_t.load(":/images/button_ok.png");
     but_box->button(QDialogButtonBox::Ok)->setIcon(QPixmap::fromImage(ico_t));
     connect(but_box, SIGNAL(accepted()), this, SLOT(accept()));
     but_box->button(QDialogButtonBox::Cancel)->setText(_("Cancel"));
-    if(!ico_t.load(TUIS::icoGet("button_cancel",NULL,true).c_str())) ico_t.load(":/images/button_cancel.png");
+    if(!ico_t.load(TUIS::icoPath("button_cancel").c_str())) ico_t.load(":/images/button_cancel.png");
     but_box->button(QDialogButtonBox::Cancel)->setIcon(QPixmap::fromImage(ico_t));
     connect(but_box, SIGNAL(rejected()), this, SLOT(reject()));
     dlg_lay->addWidget( but_box );
@@ -202,21 +204,21 @@ DlgUser::DlgUser( const QString &iuser, const QString &ipass, const QString &iVC
 						      QDialogButtonBox::Cancel, Qt::Horizontal, this );
     QImage ico_t;
     but_box->button(QDialogButtonBox::Ok)->setText(_("Ok"));
-    if(!ico_t.load(TUIS::icoGet("button_ok",NULL,true).c_str())) ico_t.load(":/images/button_ok.png");
+    if(!ico_t.load(TUIS::icoPath("button_ok").c_str())) ico_t.load(":/images/button_ok.png");
     but_box->button(QDialogButtonBox::Ok)->setIcon(QPixmap::fromImage(ico_t));
     connect(but_box, SIGNAL(accepted()), this, SLOT(accept()));
     but_box->button(QDialogButtonBox::Cancel)->setText(_("Cancel"));
-    if(!ico_t.load(TUIS::icoGet("button_cancel",NULL,true).c_str())) ico_t.load(":/images/button_cancel.png");
+    if(!ico_t.load(TUIS::icoPath("button_cancel").c_str())) ico_t.load(":/images/button_cancel.png");
     but_box->button(QDialogButtonBox::Cancel)->setIcon(QPixmap::fromImage(ico_t));
     connect(but_box, SIGNAL(rejected()), this, SLOT(reject()));
     dlg_lay->addWidget( but_box );
 
     connect(this, SIGNAL(finished(int)), this, SLOT(finish(int)));
 
-    //- Fill users list -
+    //Fill users list
     XMLNode req("get");
     req.setAttr("path","/Security/%2fusgr%2fusers");
-    if( !mod->cntrIfCmd(req,iuser.toAscii().data(),ipass.toAscii().data(),iVCAstat.toAscii().data(),true) )
+    if(!mod->cntrIfCmd(req,iuser.toStdString(),ipass.toStdString(),iVCAstat.toStdString(),true))
 	for(unsigned i_u = 0; i_u < req.childSize(); i_u++)
 	    users->addItem(req.childGet(i_u)->text().c_str());
 
@@ -239,8 +241,8 @@ void DlgUser::finish( int result )
     {
 	//> Check user auth
 	XMLNode req("get");
-	req.setAttr("path",string("/Security/")+user().toAscii().data()+"/%2fauth")->setAttr("password",password().toAscii().data());
-	if(!mod->cntrIfCmd(req,user().toAscii().data(),password().toAscii().data(),VCAstat.toAscii().data(),true) && atoi(req.text().c_str()))
+	req.setAttr("path",string("/Security/")+user().toStdString()+"/%2fauth")->setAttr("password",password().toStdString());
+	if(!mod->cntrIfCmd(req,user().toStdString(),password().toStdString(),VCAstat.toStdString(),true) && atoi(req.text().c_str()))
 	    setResult(SelOK);
 	else setResult(SelErr);
     }
@@ -317,11 +319,11 @@ FontDlg::FontDlg( QWidget *parent, const QString &ifnt )
 						      QDialogButtonBox::Cancel, Qt::Horizontal, this );
     QImage ico_t;
     but_box->button(QDialogButtonBox::Ok)->setText(_("Ok"));
-    if(!ico_t.load(TUIS::icoGet("button_ok",NULL,true).c_str())) ico_t.load(":/images/button_ok.png");
+    if(!ico_t.load(TUIS::icoPath("button_ok").c_str())) ico_t.load(":/images/button_ok.png");
     but_box->button(QDialogButtonBox::Ok)->setIcon(QPixmap::fromImage(ico_t));
     connect(but_box, SIGNAL(accepted()), this, SLOT(accept()));
     but_box->button(QDialogButtonBox::Cancel)->setText(_("Cancel"));
-    if(!ico_t.load(TUIS::icoGet("button_cancel",NULL,true).c_str())) ico_t.load(":/images/button_cancel.png");
+    if(!ico_t.load(TUIS::icoPath("button_cancel").c_str())) ico_t.load(":/images/button_cancel.png");
     but_box->button(QDialogButtonBox::Cancel)->setIcon(QPixmap::fromImage(ico_t));
     connect(but_box, SIGNAL(rejected()), this, SLOT(reject()));
     dlg_lay->addWidget( but_box, 5, 0, 1, 2 );
@@ -343,7 +345,7 @@ void FontDlg::setFont( const QString &fnt )
 {
     char family[101]; strcpy(family,"Arial");
     int size = 10, bold = 0, italic = 0, underline = 0, strike = 0;
-    sscanf(fnt.toAscii().data(),"%100s %d %d %d %d %d",family,&size,&bold,&italic,&underline,&strike);
+    sscanf(fnt.toStdString().c_str(),"%100s %d %d %d %d %d",family,&size,&bold,&italic,&underline,&strike);
     fntSel->setCurrentFont(QFont(QString(family).replace(QRegExp("_")," ")));
     spBox->setValue(size);
     chBold->setCheckState(bold?Qt::Checked:Qt::Unchecked);
@@ -561,12 +563,12 @@ void LineEdit::setValue( const QString &txt )
 	    ((QTimeEdit*)ed_fld)->setTime(QTime().addSecs(txt.toInt()));
 	    break;
 	case Date: case DateTime:
-	    if( ((QDateTimeEdit*)ed_fld)->calendarWidget()->isVisible() ) break;
+	    if(((QDateTimeEdit*)ed_fld)->calendarWidget()->isVisible()) break;
 	    ((QDateTimeEdit*)ed_fld)->setDateTime(QDateTime::fromTime_t(txt.toInt()));
 	    break;
 	case Combo:
-	    if( ((QComboBox*)ed_fld)->findText(txt) < 0 ) ((QComboBox*)ed_fld)->addItem(txt);
-	    ((QComboBox*)ed_fld)->setEditText(txt);
+	    if(((QComboBox*)ed_fld)->findText(txt) < 0) ((QComboBox*)ed_fld)->addItem(txt);
+	    if(txt != value())	((QComboBox*)ed_fld)->setEditText(txt);
 	    break;
     }
     if(ed_fld) ed_fld->blockSignals(false);
@@ -587,11 +589,11 @@ void LineEdit::setCfg(const QString &cfg)
 	    string	pref, suff;
 	    if( !cfg.isEmpty() )
 	    {
-		minv  = atoi(TSYS::strSepParse(cfg.toAscii().data(),0,':').c_str());
-		maxv  = atoi(TSYS::strSepParse(cfg.toAscii().data(),1,':').c_str());
-		sstep = atoi(TSYS::strSepParse(cfg.toAscii().data(),2,':').c_str());
-		pref  = TSYS::strSepParse(cfg.toAscii().data(),3,':');
-		suff  = TSYS::strSepParse(cfg.toAscii().data(),4,':');
+		minv  = atoi(TSYS::strSepParse(cfg.toStdString(),0,':').c_str());
+		maxv  = atoi(TSYS::strSepParse(cfg.toStdString(),1,':').c_str());
+		sstep = atoi(TSYS::strSepParse(cfg.toStdString(),2,':').c_str());
+		pref  = TSYS::strSepParse(cfg.toStdString(),3,':');
+		suff  = TSYS::strSepParse(cfg.toStdString(),4,':');
 	    }
 	    ((QSpinBox*)ed_fld)->setRange(minv,maxv);
 	    ((QSpinBox*)ed_fld)->setSingleStep(sstep);
@@ -606,12 +608,12 @@ void LineEdit::setCfg(const QString &cfg)
 	    int    dec = 2;
 	    if( !cfg.isEmpty() )
 	    {
-		minv  = atof(TSYS::strSepParse(cfg.toAscii().data(),0,':').c_str());
-		maxv  = atof(TSYS::strSepParse(cfg.toAscii().data(),1,':').c_str());
-		sstep = atof(TSYS::strSepParse(cfg.toAscii().data(),2,':').c_str());
-		pref  = TSYS::strSepParse(cfg.toAscii().data(),3,':');
-		suff  = TSYS::strSepParse(cfg.toAscii().data(),4,':');
-		dec   = atoi(TSYS::strSepParse(cfg.toAscii().data(),5,':').c_str());
+		minv  = atof(TSYS::strSepParse(cfg.toStdString(),0,':').c_str());
+		maxv  = atof(TSYS::strSepParse(cfg.toStdString(),1,':').c_str());
+		sstep = atof(TSYS::strSepParse(cfg.toStdString(),2,':').c_str());
+		pref  = TSYS::strSepParse(cfg.toStdString(),3,':');
+		suff  = TSYS::strSepParse(cfg.toStdString(),4,':');
+		dec   = atoi(TSYS::strSepParse(cfg.toStdString(),5,':').c_str());
 	    }
 	    ((QDoubleSpinBox*)ed_fld)->setRange(minv,maxv);
 	    ((QDoubleSpinBox*)ed_fld)->setSingleStep(sstep);
@@ -706,10 +708,6 @@ SyntxHighl::SyntxHighl(QTextDocument *parent) : QSyntaxHighlighter(parent)
 void SyntxHighl::setSnthHgl(XMLNode nd)
 {
     rules = nd;
-
-    //> Set current font settings
-    document()->setDefaultFont(WdgShape::getFont(rules.attr("font"), 1, false));
-
     rehighlight();
 }
 
@@ -729,75 +727,75 @@ void SyntxHighl::rule(XMLNode *irl, const QString &text, int off, char lev)
     //> Stream process by rules
     for(int i_t = 0; i_t < text.length(); )
     {
-        if(curBlk && !i_t) { minRule = curBlk-1; minPos = 0; }
-        else minRule = -1;
+	if(curBlk && !i_t) { minRule = curBlk-1; minPos = 0; }
+	else minRule = -1;
 
-        for(int i_ch = 0; i_t != minPos && i_ch < (int)irl->childSize(); i_ch++)
-        {
-            if(!(minPos < i_t || rul_pos[i_ch] < i_t || rul_pos[i_ch] < minPos)) continue;
-            if(rul_pos[i_ch] >= i_t && rul_pos[i_ch] < minPos)	{ minPos = rul_pos[i_ch]; minRule = i_ch; continue; }
-            if(rul_pos[i_ch] == i_t && rul_pos[i_ch] == minPos) { minRule = i_ch; break; }
+	for(int i_ch = 0; i_t != minPos && i_ch < (int)irl->childSize(); i_ch++)
+	{
+	    if(!(minPos < i_t || rul_pos[i_ch] < i_t || rul_pos[i_ch] < minPos)) continue;
+	    if(rul_pos[i_ch] >= i_t && rul_pos[i_ch] < minPos)	{ minPos = rul_pos[i_ch]; minRule = i_ch; continue; }
+	    if(rul_pos[i_ch] == i_t && rul_pos[i_ch] == minPos) { minRule = i_ch; break; }
 
-            //> Call rule
-            rl = irl->childGet(i_ch);
-            if(rl->name() == "rule")    expr.setPattern(rl->attr("expr").c_str());
-            else if(rl->name() == "blk")expr.setPattern(rl->attr("beg").c_str());
-            else continue;
+	    //> Call rule
+	    rl = irl->childGet(i_ch);
+	    if(rl->name() == "rule")    expr.setPattern(rl->attr("expr").c_str());
+	    else if(rl->name() == "blk")expr.setPattern(rl->attr("beg").c_str());
+	    else continue;
 	    expr.setMinimal(atoi(rl->attr("min").c_str()));
-            rul_pos[i_ch] = expr.indexIn(text,i_t);
-            if(expr.matchedLength() <= 0) continue;
-            if(rul_pos[i_ch] < 0) rul_pos[i_ch] = text.length();
-            if(minPos < i_t || rul_pos[i_ch] < minPos) { minPos = rul_pos[i_ch]; minRule = i_ch; }
-        }
-        if(minRule < 0) break;
+	    rul_pos[i_ch] = expr.indexIn(text,i_t);
+	    if(expr.matchedLength() <= 0) continue;
+	    if(rul_pos[i_ch] < 0) rul_pos[i_ch] = text.length();
+	    if(minPos < i_t || rul_pos[i_ch] < minPos) { minPos = rul_pos[i_ch]; minRule = i_ch; }
+	}
+	if(minRule < 0) break;
 
-        //> Process minimal rule
-        rl = irl->childGet(minRule);
-        kForm.setForeground(QColor(rl->attr("color").c_str()));
-        kForm.setFontWeight(atoi(rl->attr("font_weight").c_str()) ? QFont::Bold : QFont::Normal);
-        kForm.setFontItalic(atoi(rl->attr("font_italic").c_str()));
+	//> Process minimal rule
+	rl = irl->childGet(minRule);
+	kForm.setForeground(QColor(rl->attr("color").c_str()));
+	kForm.setFontWeight(atoi(rl->attr("font_weight").c_str()) ? QFont::Bold : QFont::Normal);
+	kForm.setFontItalic(atoi(rl->attr("font_italic").c_str()));
 
-        if(rl->name() == "rule")
-        {
-            expr.setPattern(rl->attr("expr").c_str());
+	if(rl->name() == "rule")
+	{
+	    expr.setPattern(rl->attr("expr").c_str());
 	    expr.setMinimal(atoi(rl->attr("min").c_str()));
-            if(expr.indexIn(text,i_t) != rul_pos[minRule]) break;
-            setFormat(rul_pos[minRule]+off, expr.matchedLength(), kForm);
-            //> Call include rules
-            if(rl->childSize()) rule(rl, text.mid(rul_pos[minRule],expr.matchedLength()), rul_pos[minRule]+off, lev+1);
-            i_t = rul_pos[minRule]+expr.matchedLength();
-        }
-        else if(rl->name() == "blk")
-        {
-            if(curBlk) rul_pos[minRule] = curBlk = startBlk = 0;
-            else
-            {
-                expr.setPattern(rl->attr("beg").c_str());
+	    if(expr.indexIn(text,i_t) != rul_pos[minRule]) break;
+	    setFormat(rul_pos[minRule]+off, expr.matchedLength(), kForm);
+	    //> Call include rules
+	    if(rl->childSize()) rule(rl, text.mid(rul_pos[minRule],expr.matchedLength()), rul_pos[minRule]+off, lev+1);
+	    i_t = rul_pos[minRule]+expr.matchedLength();
+	}
+	else if(rl->name() == "blk")
+	{
+	    if(curBlk) rul_pos[minRule] = curBlk = startBlk = 0;
+	    else
+	    {
+		expr.setPattern(rl->attr("beg").c_str());
 		expr.setMinimal(atoi(rl->attr("min").c_str()));
-                if(expr.indexIn(text,i_t) != rul_pos[minRule]) break;
-                startBlk = rul_pos[minRule]+expr.matchedLength();
-            }
-            QRegExp eExpr(rl->attr("end").c_str());
-            eExpr.setMinimal(atoi(rl->attr("min").c_str()));
-            endIndex = eExpr.indexIn(text, startBlk);
-            if(endIndex == -1 || eExpr.matchedLength() <= 0)
-            {
-                setFormat(rul_pos[minRule]+off, (text.length()-rul_pos[minRule]), kForm);
-                sizeBlk = text.length()-startBlk;
-                i_t = text.length();
-            }
-            else
-            {
-                setFormat(rul_pos[minRule]+off, (endIndex-rul_pos[minRule]+eExpr.matchedLength()), kForm);
-                sizeBlk = endIndex-startBlk;
-                i_t = endIndex + eExpr.matchedLength();
-            }
-            //> Call include rules
-            if(rl->childSize()) rule(rl, text.mid(startBlk,sizeBlk), startBlk+off, lev+1);
-            if(endIndex == -1 || eExpr.matchedLength() <= 0)
-                setCurrentBlockState(((minRule+1)<<(lev*8))|currentBlockState());
-            else setCurrentBlockState(currentBlockState()& ~(0xFFFFFFFF<<(lev*8)));
-        }
+		if(expr.indexIn(text,i_t) != rul_pos[minRule]) break;
+		startBlk = rul_pos[minRule]+expr.matchedLength();
+	    }
+	    QRegExp eExpr(rl->attr("end").c_str());
+	    eExpr.setMinimal(atoi(rl->attr("min").c_str()));
+	    endIndex = eExpr.indexIn(text, startBlk);
+	    if(endIndex == -1 || eExpr.matchedLength() <= 0)
+	    {
+		setFormat(rul_pos[minRule]+off, (text.length()-rul_pos[minRule]), kForm);
+		sizeBlk = text.length()-startBlk;
+		i_t = text.length();
+	    }
+	    else
+	    {
+		setFormat(rul_pos[minRule]+off, (endIndex-rul_pos[minRule]+eExpr.matchedLength()), kForm);
+		sizeBlk = endIndex-startBlk;
+		i_t = endIndex + eExpr.matchedLength();
+	    }
+	    //> Call include rules
+	    if(rl->childSize()) rule(rl, text.mid(startBlk,sizeBlk), startBlk+off, lev+1);
+	    if(endIndex == -1 || eExpr.matchedLength() <= 0)
+		setCurrentBlockState(((minRule+1)<<(lev*8))|currentBlockState());
+	    else setCurrentBlockState(currentBlockState()& ~(0xFFFFFFFF<<(lev*8)));
+	}
     }
 }
 
@@ -829,7 +827,7 @@ TextEdit::TextEdit( QWidget *parent, bool prev_dis ) :
     box->addWidget(ed_fld);
 
     QImage ico_t;
-    if( !ico_t.load(TUIS::icoGet("find",NULL,true).c_str()) ) ico_t.load(":/images/find.png");
+    if( !ico_t.load(TUIS::icoPath("find").c_str()) ) ico_t.load(":/images/find.png");
     actFind = new QAction(QPixmap::fromImage(ico_t), _("Find"), ed_fld);
     actFind->setShortcut(Qt::CTRL+Qt::Key_F);
     actFind->setShortcutContext(Qt::WidgetShortcut);
@@ -846,12 +844,12 @@ TextEdit::TextEdit( QWidget *parent, bool prev_dis ) :
 	but_box = new QDialogButtonBox(QDialogButtonBox::Apply|QDialogButtonBox::Cancel,Qt::Horizontal,this);
 	QImage ico_t;
 	but_box->button(QDialogButtonBox::Apply)->setText("");
-	if(!ico_t.load(TUIS::icoGet("button_ok",NULL,true).c_str())) ico_t.load(":/images/button_ok.png");
+	if(!ico_t.load(TUIS::icoPath("button_ok").c_str())) ico_t.load(":/images/button_ok.png");
 	but_box->button(QDialogButtonBox::Apply)->setIcon(QPixmap::fromImage(ico_t));
 	but_box->button(QDialogButtonBox::Apply)->setIconSize(QSize(12,12));
 	connect(but_box->button(QDialogButtonBox::Apply), SIGNAL(pressed()), this, SLOT(applySlot()));
 	but_box->button(QDialogButtonBox::Cancel)->setText("");
-	if(!ico_t.load(TUIS::icoGet("button_cancel",NULL,true).c_str())) ico_t.load(":/images/button_cancel.png");
+	if(!ico_t.load(TUIS::icoPath("button_cancel").c_str())) ico_t.load(":/images/button_cancel.png");
 	but_box->button(QDialogButtonBox::Cancel)->setIcon(QPixmap::fromImage(ico_t));
 	but_box->button(QDialogButtonBox::Cancel)->setIconSize(QSize(12,12));
 	connect(but_box->button(QDialogButtonBox::Cancel), SIGNAL(pressed()), this, SLOT(cancelSlot()));
@@ -896,8 +894,8 @@ void TextEdit::setSnthHgl(XMLNode nd)
 
 void TextEdit::changed()
 {
-    if( isInit ) return;
-    if( but_box && !but_box->isEnabled() && text() != m_text ) 
+    if(isInit) return;
+    if(but_box && !but_box->isEnabled() && text() != m_text)
     {
 	but_box->setVisible(true);
 	but_box->setEnabled(true);
@@ -1108,53 +1106,39 @@ bool WdgView::attrSet( const string &attr, const string &val, int uiPrmPos )
 
     switch(uiPrmPos)
     {
-	case -1:	//load
-	    up = true;
-	    break;
+	case A_COM_LOAD: up = true;	break;
 	case 0:	return false;
-	case 1:		//root
+	case A_ROOT:
 	    if(shape && shape->id() == val)	break;
 	    if(shape) shape->destroy(this);
 	    shape = mod->getWdgShape(val);
 	    if(shape) shape->init(this);
 	    break;
-	case 7:		//geomX
+	case A_GEOM_X:
 	    if(wLevel() == 0)	break;
 	    mWPos = QPointF(((WdgView*)parentWidget())->xScale(true)*atof(val.c_str()),posF().y());
 	    up = true;
 	    break;
-	case 8:		//geomY
+	case A_GEOM_Y:
 	    if(wLevel() == 0)	break;
 	    mWPos = QPointF(posF().x(),((WdgView*)parentWidget())->yScale(true)*atof(val.c_str()));
 	    up = true;
 	    break;
-	case 9:		//geomW
-	    mWSize = QSizeF(xScale(true)*atof(val.c_str()),sizeF().height());
-	    up = true;
-	    break;
-	case 10:	//geomH
-	    mWSize = QSizeF(sizeF().width(),yScale(true)*atof(val.c_str()));
-	    up = true;
-	    break;
-	case 11:	//geomZ
-	    if(wLevel() > 0) z_coord = atoi(val.c_str());
-	    break;
-	case 13:	//geomXsc
+	case A_GEOM_W: mWSize = QSizeF(xScale(true)*atof(val.c_str()),sizeF().height()); up = true;	break;
+	case A_GEOM_H: mWSize = QSizeF(sizeF().width(),yScale(true)*atof(val.c_str())); up = true;	break;
+	case A_GEOM_Z: if(wLevel() > 0) z_coord = atoi(val.c_str());					break;
+	case A_GEOM_X_SC:
 	    mWSize = QSizeF((atof(val.c_str())/x_scale)*sizeF().width(),sizeF().height());
 	    x_scale = atof(val.c_str());
 	    up = upChlds = true;
 	    break;
-	case 14:	//geomYsc
+	case A_GEOM_Y_SC:
 	    mWSize = QSizeF(sizeF().width(),(atof(val.c_str())/y_scale)*sizeF().height());
 	    y_scale = atof(val.c_str());
 	    up = upChlds = true;
 	    break;
-	case 15:	//tipTool
-	    setToolTip(val.c_str());
-	    break;
-	case 16:	//tipStatus
-	    setStatusTip(val.c_str());
-	    break;
+	case A_TIP_TOOL: setToolTip(val.c_str());	break;
+	case A_TIP_STATUS: setStatusTip(val.c_str());	break;
     }
     if(up && !allAttrLoad())
     {
@@ -1170,12 +1154,12 @@ bool WdgView::attrSet( const string &attr, const string &val, int uiPrmPos )
     return true;
 }
 
-void WdgView::attrsSet( map<string,string> &attrs )
+void WdgView::attrsSet( AttrValS &attrs )
 {
     XMLNode req("set");
     req.setAttr("path", id()+"/%2fserv%2fattr");
     string attrId, attrPos;
-    for(map<string,string>::iterator i_a = attrs.begin(); i_a != attrs.end(); i_a++)
+    for(AttrValS::iterator i_a = attrs.begin(); i_a != attrs.end(); i_a++)
     {
 	int off = 0;
 	attrId = TSYS::strParse(i_a->first, 0, ":", &off);
@@ -1188,34 +1172,37 @@ void WdgView::attrsSet( map<string,string> &attrs )
 
 string WdgView::resGet( const string &res )
 {
-    if( res.empty() )	return "";
+    if(res.empty())	return "";
 
     XMLNode req("get");
-    req.setAttr("path",id()+"/%2fwdg%2fres")->setAttr("id",res);
-    if( !cntrIfCmd(req) )	return TSYS::strDecode(req.text(),TSYS::base64);
+    req.setAttr("path", id()+"/%2fwdg%2fres")->setAttr("id", res);
+    if(!cntrIfCmd(req))	return TSYS::strDecode(req.text(), TSYS::base64);
 
     return "";
 }
 
 void WdgView::load( const string& item, bool isLoad, bool isInit, XMLNode *aBr )
 {
-    int64_t d_cnt;
-    if(mess_lev() == TMess::Debug && wLevel() == 0) d_cnt = TSYS::curTime();
+#if OSC_DEBUG >= 3
+    int64_t t_cnt;
+    if( wLevel() == 0 ) t_cnt = TSYS::curTime();
+#endif
 
     isReload = shape;
 
-    //> Load from data model
-    if(isLoad)
+    //> Load from data model -
+    if( isLoad )
     {
         bool reqBrCr = false;
-	if(!aBr)
+	if( !aBr )
 	{
 	    aBr = new XMLNode("get");
 	    aBr->setAttr("path",id()+"/%2fserv%2fattrBr");
 	    cntrIfCmd(*aBr);
 	    reqBrCr = true;
-	    if(mess_lev() == TMess::Debug)
-		mess_debug(mod->nodePath().c_str(), _("Request to VCA engine '%s' time %f ms."), id().c_str(), 1e-3*(TSYS::curTime()-d_cnt));
+#if OSC_DEBUG >= 3
+	    mess_debug("VCA DEBUG",_("Request to VCA engine '%s' time %f ms."),id().c_str(),1e-3*(TSYS::curTime()-t_cnt));
+#endif
 	}
 
 	setAllAttrLoad(true);
@@ -1223,11 +1210,11 @@ void WdgView::load( const string& item, bool isLoad, bool isInit, XMLNode *aBr )
 	    for(unsigned i_el = 0; i_el < aBr->childSize(); i_el++)
 		if(aBr->childGet(i_el)->name() == "el")
 		    attrSet("",aBr->childGet(i_el)->text(),atoi(aBr->childGet(i_el)->attr("p").c_str()));
-	setAllAttrLoad(false);
+	setAllAttrLoad( false );
 
 	//>> Delete child widgets
 	string b_nm = aBr->attr("lnkPath");
-	if(b_nm.empty()) b_nm = id();
+	if( b_nm.empty() ) b_nm = id();
 	for(int i_c = 0, i_l = 0; i_c < children().size(); i_c++)
 	{
 	    if(!qobject_cast<WdgView*>(children().at(i_c))) continue;
@@ -1239,60 +1226,60 @@ void WdgView::load( const string& item, bool isLoad, bool isInit, XMLNode *aBr )
 	}
 
 	//>> Create new child widget
-	for(int i_l = 0, i_c = 0; i_l < (int)aBr->childSize(); i_l++)
+	for( int i_l = 0, i_c = 0; i_l < (int)aBr->childSize(); i_l++ )
 	{
-	    if(aBr->childGet(i_l)->name() != "w") continue;
-	    for(i_c = 0; i_c < children().size(); i_c++)
-		if(qobject_cast<WdgView*>(children().at(i_c)) &&
-			qobject_cast<WdgView*>(children().at(i_c))->id() == (b_nm+"/wdg_"+aBr->childGet(i_l)->attr("id")))
+	    if( aBr->childGet(i_l)->name() != "w" ) continue;
+	    for( i_c = 0; i_c < children().size(); i_c++ )
+		if( qobject_cast<WdgView*>(children().at(i_c)) &&
+			qobject_cast<WdgView*>(children().at(i_c))->id() == (b_nm+"/wdg_"+aBr->childGet(i_l)->attr("id")) )
 		{
 		    ((WdgView*)children().at(i_c))->load((item==id())?"":item,true,(wLevel()>0)?isInit:false,aBr->childGet(i_l));
 		    break;
 		}
-	    if(i_c < children().size()) continue;
+	    if( i_c < children().size() ) continue;
 	    WdgView *nwdg = newWdgItem(b_nm+"/wdg_"+aBr->childGet(i_l)->attr("id"));
 	    nwdg->show();
 	    nwdg->load((item==id())?"":item,true,(wLevel()>0)?isInit:false,aBr->childGet(i_l));
 	}
 
 	//>> Children widgets order update
-	orderUpdate();
+	orderUpdate( );
 
-	if(reqBrCr) delete aBr;
+	if( reqBrCr ) delete aBr;
     }
     //> Going to children init
     else
-	for(int i_c = 0; i_c < children().size(); i_c++)
+	for( int i_c = 0; i_c < children().size(); i_c++ )
 	{
 	    WdgView *wdg = qobject_cast<WdgView*>(children().at(i_c));
-	    if(wdg && (item.empty() || item == id() || wdg->id() == item.substr(0,wdg->id().size())))
+	    if( wdg && (item.empty() || item == id() || wdg->id() == item.substr(0,wdg->id().size())) )
 		wdg->load((item==id())?"":item,false,(wLevel()>0)?isInit:false);
 	}
 
     //> Init loaded data
-    if(isInit && (item.empty() || item == id()) && wLevel() > 0) attrSet("", "load", -1);
+    if( isInit && (item.empty() || item == id()) && wLevel()>0 )	attrSet("","load",-1);
 
     //> Post load init for root widget
-    if(wLevel() == 0)
+    if( wLevel() == 0 )
     {
-	if(mess_lev() == TMess::Debug)
-	{
-	    mess_debug(mod->nodePath().c_str(), _("Load '%s' time %f ms."), id().c_str(), 1e-3*(TSYS::curTime()-d_cnt));
-	    d_cnt = TSYS::curTime();
-	}
+#if OSC_DEBUG >= 3
+	mess_debug("VCA DEBUG",_("Load '%s' time %f ms."),id().c_str(),1e-3*(TSYS::curTime()-t_cnt));
+	t_cnt = TSYS::curTime();
+#endif
 
-	attrSet("", "load", -1);
-	for(int i_c = 0; i_c < children().size(); i_c++)
+	attrSet("","load",-1);
+	for( int i_c = 0; i_c < children().size(); i_c++ )
 	{
 	    WdgView *wdg = qobject_cast<WdgView*>(children().at(i_c));
-	    if(wdg && (item.empty() || item == id() || wdg->id() == item.substr(0,wdg->id().size())))
+	    if( wdg && (item.empty() || item == id() || wdg->id() == item.substr(0,wdg->id().size())) )
 		wdg->load((item==id())?"":item,false,true);
 	}
 	update();
         //repaint();
 
-	if(mess_lev() == TMess::Debug)
-	    mess_debug(mod->nodePath().c_str(), _("Init '%s' time %f ms."), id().c_str(), 1e-3*(TSYS::curTime()-d_cnt));
+#if OSC_DEBUG >= 3
+	mess_debug("VCA DEBUG",_("Init '%s' time %f ms."),id().c_str(),1e-3*(TSYS::curTime()-t_cnt));
+#endif
     }
 }
 
@@ -1302,10 +1289,10 @@ void WdgView::orderUpdate( )
 
     vector< pair<int,QObject*> > arr;
     arr.reserve(children().size());
-    for( int i_c = 0; i_c < ols.size(); i_c++ )
+    for(int i_c = 0; i_c < ols.size(); i_c++)
     {
 	WdgView *cw = qobject_cast<WdgView*>(ols[i_c]);
-	if( cw ) arr.push_back(pair<int,QObject*>(cw->z(),cw));
+	if(cw) arr.push_back(pair<int,QObject*>(cw->z(),cw));
 	else arr.push_back(pair<int,QObject*>(100000,ols[i_c]));
     }
     make_heap(arr.begin(),arr.end());
@@ -1321,7 +1308,7 @@ bool WdgView::event( QEvent *event )
     if(event->type() == QEvent::Paint)
     {
 	//> Self widget view
-	if(shape) return shape->event(this,event);
+	if(shape) return shape->event(this, event);
 	return true;
     }
 

@@ -169,8 +169,6 @@ class TTrOut: public TTransportOut
 	void load_( );
 	void save_( );
 
-	TVariant objFuncCall( const string &id, vector<TVariant> &prms, const string &user );
-
     private:
 	//Methods
 	void cntrCmdProc( XMLNode *opt );	//Control interface command process
@@ -208,7 +206,7 @@ class TTr: public TTipTransport
 	TTransportIn  *In( const string &name, const string &idb );
 	TTransportOut *Out( const string &name, const string &idb );
 
-	static void writeLine( int fd, const string &ln );
+	static void writeLine( int fd, const string &ln, bool noNewLn = false );
 	static string expect( int fd, const string& expLst, int tm );
 
 	bool devLock( const string &dn, bool check = false );

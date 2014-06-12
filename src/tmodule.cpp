@@ -49,7 +49,7 @@ TModule::TModule( const string &id ) : mId(id)
     lc_id = string("oscd_")+mId;
 
 #ifdef HAVE_LIBINTL_H
-    bindtextdomain(lc_id.c_str(), localedir_full);
+    bindtextdomain(lc_id.c_str(),LOCALEDIR);
 #endif
 
     //> Dynamic string translation hook
@@ -57,16 +57,20 @@ TModule::TModule( const string &id ) : mId(id)
     char mess[][100] = { _("Author"), _("License") };
 #endif
 
-    if(mess_lev() == TMess::Debug) SYS->cntrIter("ModulsCntr",1);
+#if OSC_DEBUG >= 1
+    SYS->cntrIter("ModulsCntr",1);
+#endif
 }
 
-TModule::~TModule( )
+TModule::~TModule(  )
 {
     //> Clean export function list
     for(unsigned i = 0; i < m_efunc.size(); i++)
         delete m_efunc[i];
 
-    if(mess_lev() == TMess::Debug) SYS->cntrIter("ModulsCntr",-1);
+#if OSC_DEBUG >= 1
+    SYS->cntrIter("ModulsCntr",-1);
+#endif
 }
 
 string TModule::objName( )	{ return TCntrNode::objName()+":TModule"; }
@@ -142,7 +146,7 @@ void TModule::cntrCmdProc( XMLNode *opt )
 	TCntrNode::cntrCmdProc(opt);
 	ctrMkNode("oscada_cntr",opt,-1,"/",_("Module: ")+modId(),R_R_R_);
 	ctrMkNode("branches",opt,-1,"/br","",R_R_R_);
-	if(TUIS::icoGet(owner().subId()+"."+modId(),NULL,true).size()) ctrMkNode("img",opt,-1,"/ico","",R_R_R_);
+	if(TUIS::icoPresent(owner().subId()+"."+modId())) ctrMkNode("img",opt,-1,"/ico","",R_R_R_);
 	if(ctrMkNode("area",opt,-1,"/help",_("Help")))
 	    if(ctrMkNode("area",opt,-1,"/help/m_inf",_("Module information")))
 	    {

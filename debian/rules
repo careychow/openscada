@@ -29,7 +29,7 @@ endif
 config.status:
 	dh_testdir
 	dh_autoreconf
-	./configure $(CROSS) --prefix=/usr --sysconfdir=/etc
+	./configure $(CROSS) --prefix=/usr
 
 #Architecture
 build: build-arch build-indep
@@ -64,9 +64,10 @@ install-indep:
 	dh_clean -k -i
 	dh_installdirs -i
 
-	$(MAKE) DESTDIR=$(CURDIR)/debian/tmp install
-
 	dh_install -i
+
+	install -m 644 -pD data/ModelsDB/AGLKS/openscada_AGLKS.png debian/openscada-model.aglks/var/spool/openscada/icons/AGLKS.png
+	install -m 644 -pD data/ModelsDB/Boiler/openscada_Boiler.png debian/openscada-model.boiler/var/spool/openscada/icons/Boiler.png
 
 install-arch:
 	dh_testdir
@@ -98,7 +99,7 @@ binary-common:
 #	dh_installinfo
 #	dh_installman
 	dh_link
-	dh_strip --dbg-package=openscada-dbg
+	dh_strip
 #	dh_compress
 	dh_fixperms
 #	dh_perl

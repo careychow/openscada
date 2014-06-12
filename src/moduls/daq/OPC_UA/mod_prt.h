@@ -29,7 +29,7 @@
 
 #include <tprotocols.h>
 
-#include "libOPC_UA.h"
+#include "libOPC_UA/libOPC_UA.h"
 
 #undef _
 #define _(mess) modPrt->I18N(mess)
@@ -37,7 +37,7 @@
 using std::string;
 using std::map;
 using namespace OSCADA;
-using namespace OSCADA_OPC;
+using namespace OPC;
 
 //*************************************************
 //* Protocol modul info!                          *
@@ -50,6 +50,8 @@ using namespace OSCADA_OPC;
 #define PRT_DESCR	_("OPC UA protocol implementation.")
 #define PRT_LICENSE	"GPL2"
 //*************************************************
+
+#define NS_OpenSCADA_DAQ 2
 
 namespace OPC_UA
 {
@@ -95,6 +97,7 @@ class OPCEndPoint: public TCntrNode, public TConfig, public Server::EP
 	string url( )		{ return mURL; }
 	string cert( );
 	string pvKey( );
+	double subscrProcPer( )	{ return 0; }	//Disabled
 
 	string getStatus( );
 
@@ -109,7 +112,7 @@ class OPCEndPoint: public TCntrNode, public TConfig, public Server::EP
 
 	void setDB( const string &vl )		{ mDB = vl; modifG(); }
 
-	int reqData( int reqTp, XML_N &req );
+	uint32_t reqData( int reqTp, XML_N &req );
 
 	TProt &owner( );
 
@@ -148,7 +151,7 @@ class TProt: public TProtocol, public Server
 	TProt( string name );
 	~TProt( );
 
-	//> Generic variables
+	// Generic variables
 	string lang2CodeSYS( )		{ return Mess->lang2Code(); }
 	string applicationUri( );
 	string productUri( );
@@ -157,7 +160,7 @@ class TProt: public TProtocol, public Server
 	void modStart( );
 	void modStop( );
 
-	//> Server's functions
+	// Server's functions
 	void epList( vector<string> &ls )	{ chldList(mEndPnt,ls); }
 	bool epPresent( const string &id )	{ return chldPresent(mEndPnt,id); }
 	void epAdd( const string &id, const string &db = "*.*" );
@@ -165,7 +168,8 @@ class TProt: public TProtocol, public Server
 	AutoHD<OPCEndPoint> epAt( const string &id )	{ return chldAt(mEndPnt,id); }
 
 	void discoveryUrls( vector<string> &ls );
-	bool inReq( string &request, string &answer, const string &sender );
+	bool inReq( string &request, const string &inPrtId, string *answ = NULL );
+	int writeToClient( const string &inPrtId, const string &data )	{ return 0; }
 
 	TElem &endPntEl( )			{ return mEndPntEl; }
 
@@ -181,7 +185,7 @@ class TProt: public TProtocol, public Server
 	void save_( );
 
 	bool debug( );
-	void debugMess( const string &mess, const string &data );
+	void debugMess( const string &mess );
 	void epEnList( vector<string> &ls );
 	EP *epEnAt( const string &ep );
 
@@ -197,7 +201,7 @@ class TProt: public TProtocol, public Server
 	vector< AutoHD<OPCEndPoint> > ep_hd;
 
 	Res	nRes;
-	Res	en_res;				//Resource for enable endpoints
+	Res	enRes;				//Resource for enable endpoints
 };
 
 extern TProt *modPrt;

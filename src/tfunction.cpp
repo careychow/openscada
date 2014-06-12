@@ -66,8 +66,8 @@ TFunction &TFunction::operator=( TFunction &func )
 
 void TFunction::preDisable( int flag )
 {
-    if(mTVal) { delete mTVal; mTVal = NULL; }
-    if(used.size())
+    if( mTVal ) { delete mTVal; mTVal = NULL; }
+    if( used.size() )
     {
 	string mess;
 	for(unsigned i = 0; i < used.size(); i++)
@@ -78,12 +78,12 @@ void TFunction::preDisable( int flag )
 
 void TFunction::setId( const string &vl )
 {
-    if(!nodePrev(true)) mId = vl;
+    if( !nodePrev(true) ) mId = vl;
 }
 
 int TFunction::ioSize( )
 {
-    return mIO.size();
+    return mIO.size( );
 }
 
 IO *TFunction::io( int iid )
@@ -180,9 +180,9 @@ void TFunction::postIOCfgChange()
 void TFunction::valAtt( TValFunc *vfnc )
 {
     ResAlloc res(nodeRes(), true);
-    for(unsigned i=0; i < used.size(); i++)
-	if(used[i] == vfnc)
-	    throw TError(nodePath().c_str(), _("Value '%s' is already attached!"), vfnc->vfName().c_str());
+    for( unsigned i=0; i < used.size(); i++ )
+	if( used[i] == vfnc )
+	    throw TError(nodePath().c_str(),_("Value '%s' is already attached!"),vfnc->vfName().c_str());
     used.push_back(vfnc);
 }
 
@@ -364,8 +364,7 @@ void TFunction::cntrCmdProc( XMLNode *opt )
 	if(ctrChkNode(opt,"get",RWRW__,"root",grp,SEC_RD))	opt->setText(TBDS::genDBGet(nodePath()+"ntCalc","10",opt->attr("user")));
 	if(ctrChkNode(opt,"set",RWRW__,"root",grp,SEC_WR))	TBDS::genDBSet(nodePath()+"ntCalc",opt->text(),opt->attr("user"));
     }
-    else if(a_path == "/exec/tm" && mTVal && ctrChkNode(opt,"get",R_R___,"root",grp,SEC_RD))
-	opt->setText(TSYS::time2str(SYS->cntrGet(nodePath('.'))));
+    else if(a_path == "/exec/tm" && mTVal && ctrChkNode(opt,"get",R_R___,"root",grp,SEC_RD))	opt->setText(TSYS::time2str(mTVal->calcTm()));
     else if(a_path.substr(0,8) == "/exec/io" && mTVal)
     {
 	string io_id = TSYS::pathLev(a_path,2);
@@ -383,15 +382,15 @@ void TFunction::cntrCmdProc( XMLNode *opt )
     {
 	int n_tcalc = atoi(TBDS::genDBGet(nodePath()+"ntCalc","10",opt->attr("user")).c_str());
 	string wuser = opt->attr("user");
-	time_t tm_lim = SYS->sysTm()+STD_WAIT_TM;
 	int64_t t_cnt = TSYS::curTime();
-	for(int i_c = 0; i_c < n_tcalc && SYS->sysTm() < tm_lim; i_c++)
+	time_t tm_lim = time(NULL)+STD_WAIT_TM;
+	for(int i_c = 0; i_c < n_tcalc && time(NULL) < tm_lim; i_c++)
 	    mTVal->calc(wuser);
-	t_cnt = TSYS::curTime()-t_cnt;
-	SYS->cntrSet(nodePath('.'), t_cnt);
+	mTVal->setCalcTm(TSYS::curTime()-t_cnt);
     }
     else TCntrNode::cntrCmdProc(opt);
 }
+
 
 //*************************************************
 //* IO                                            *
@@ -475,7 +474,7 @@ void IO::setRez( const string &val )
 //* TValFunc                                      *
 //*************************************************
 TValFunc::TValFunc( const string &iname, TFunction *ifunc, bool iblk, const string &iuser ) :
-    exCtx(NULL), mName(iname), mUser(iuser), mBlk(iblk), mMdfChk(false), mFunc(NULL)
+    mName(iname), mUser(iuser), mBlk(iblk), mDimens(false), mMdfChk(false), tm_calc(0), mFunc(NULL)
 {
     pthread_mutex_init(&mRes, NULL);
     setFunc(ifunc);
@@ -490,27 +489,27 @@ TValFunc::~TValFunc( )
 
 void TValFunc::setFunc( TFunction *ifunc, bool att_det )
 {
-    if( mFunc )	funcDisConnect(att_det);
-    if( ifunc )
+    if(mFunc)	funcDisConnect(att_det);
+    if(ifunc)
     {
 	mFunc = ifunc;
-	if( att_det )
+	if(att_det)
 	{
 	    mFunc->AHDConnect();
 	    mFunc->valAtt(this);
 	}
-	for( int i_vl = 0; i_vl < mFunc->ioSize(); i_vl++ )
+	for(int i_vl = 0; i_vl < mFunc->ioSize(); i_vl++)
 	{
 	    SVl val;
 	    val.tp = mFunc->io(i_vl)->type();
 	    val.mdf = false;
-	    switch( val.tp )
+	    switch(val.tp)
 	    {
 		case IO::String:	val.val.s = new string(mFunc->io(i_vl)->def());		break;
 		case IO::Integer:	val.val.i = atoi(mFunc->io(i_vl)->def().c_str());	break;
 		case IO::Real:		val.val.r = atof(mFunc->io(i_vl)->def().c_str());	break;
 		case IO::Boolean:	val.val.b = atoi(mFunc->io(i_vl)->def().c_str());	break;
-		case IO::Object:	val.val.o = new AutoHD<TVarObj>(new TVarObj);	break;
+		case IO::Object:	val.val.o = new AutoHD<TVarObj>(new TVarObj);		break;
 	    }
 	    mVal.push_back(val);
 	}
@@ -749,25 +748,31 @@ void TValFunc::setMdfChk( bool set )
 
 void TValFunc::calc( const string &user )
 {
-    if(!mFunc) return;
-    if(!user.empty()) mUser = user;
-    mFunc->calc(this);
+    if( !mFunc || !mFunc->startStat() ) return;
+    if( !user.empty() ) mUser = user;
+    if( !mDimens ) mFunc->calc(this);
+    else
+    {
+	int64_t t_cnt = TSYS::curTime();
+	mFunc->calc(this);
+	tm_calc = TSYS::curTime()-t_cnt;
+    }
 }
 
 void TValFunc::preIOCfgChange( )
 {
-    setFunc(NULL, false);
+    setFunc( NULL, false );
 }
 
 void TValFunc::postIOCfgChange( )
 {
-    setFunc(mFunc, false);
+    setFunc( mFunc, false );
 }
 
 TValFunc *TValFunc::ctxGet( int key )
 {
     map<int,TValFunc* >::iterator vc = vctx.find(key);
-    if(vc == vctx.end()) return NULL;
+    if( vc == vctx.end() ) return NULL;
     return vc->second;
 }
 

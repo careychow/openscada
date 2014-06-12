@@ -34,13 +34,13 @@
 //*************************************************
 //* Modul info!                                   *
 #define MOD_ID		"QTCfg"
-#define MOD_NAME	_("System configurator (QT)")
+#define MOD_NAME	_("System configurator (Qt)")
 #define MOD_TYPE	SUI_ID
 #define VER_TYPE	SUI_VER
-#define SUB_TYPE	"QT"
+#define SUB_TYPE	"Qt"
 #define MOD_VER		"2.1.1"
 #define AUTHORS		_("Roman Savochenko")
-#define DESCRIPTION	_("Allow the QT based OpenSCADA system configurator.")
+#define DESCRIPTION	_("Allow the Qt based OpenSCADA system configurator.")
 #define LICENSE		"GPL2"
 //*************************************************
 
@@ -54,7 +54,7 @@ extern "C"
     TModule::SAt module( int n_mod )
 #endif
     {
-	if( n_mod==0 )	return TModule::SAt(MOD_ID,MOD_TYPE,VER_TYPE);
+	if(n_mod == 0)	return TModule::SAt(MOD_ID, MOD_TYPE, VER_TYPE);
 	return TModule::SAt("");
     }
 
@@ -64,8 +64,7 @@ extern "C"
     TModule *attach( const TModule::SAt &AtMod, const string &source )
 #endif
     {
-	if( AtMod == TModule::SAt(MOD_ID,MOD_TYPE,VER_TYPE) )
-	    return new QTCFG::TUIMod( source );
+	if(AtMod == TModule::SAt(MOD_ID,MOD_TYPE,VER_TYPE)) return new QTCFG::TUIMod(source);
 	return NULL;
     }
 }
@@ -88,8 +87,8 @@ TUIMod::TUIMod( string name ) : TUI(MOD_ID), start_path(string("/")+SYS->id()), 
     mSource	= name;
 
     //Public export functions
-    modFuncReg( new ExpFunc("QIcon icon();","Module QT-icon",(void(TModule::*)( )) &TUIMod::icon) );
-    modFuncReg( new ExpFunc("QMainWindow *openWindow();","Start QT GUI.",(void(TModule::*)( )) &TUIMod::openWindow) );
+    modFuncReg(new ExpFunc("QIcon icon();","Module Qt-icon",(void(TModule::*)( )) &TUIMod::icon));
+    modFuncReg(new ExpFunc("QMainWindow *openWindow();","Start Qt GUI.",(void(TModule::*)( )) &TUIMod::openWindow));
 }
 
 TUIMod::~TUIMod( )
@@ -99,8 +98,8 @@ TUIMod::~TUIMod( )
 
 string TUIMod::modInfo( const string &name )
 {
-    if( name == "SubType" ) return SUB_TYPE;
-    else return TModule::modInfo( name);
+    if(name == "SubType") return SUB_TYPE;
+    else return TModule::modInfo(name);
 }
 
 void TUIMod::modInfo( vector<string> &list )
@@ -121,7 +120,9 @@ string TUIMod::optDescr( )
 
 void TUIMod::load_( )
 {
+#if OSC_DEBUG >= 1
     mess_debug(nodePath().c_str(),_("Load module."));
+#endif
 
     //> Load parameters from command line
     string argCom, argVl;
@@ -129,17 +130,19 @@ void TUIMod::load_( )
         if(argCom == "h" || argCom == "help")	fprintf(stdout,"%s",optDescr().c_str());
 
     //> Load parameters from config-file and DB
-    setStartPath( TBDS::genDBGet(nodePath()+"StartPath",startPath()) );
-    setStartUser( TBDS::genDBGet(nodePath()+"StartUser",startUser()) );
+    setStartPath(TBDS::genDBGet(nodePath()+"StartPath",startPath()));
+    setStartUser(TBDS::genDBGet(nodePath()+"StartUser",startUser()));
 }
 
 void TUIMod::save_( )
 {
+#if OSC_DEBUG >= 1
     mess_debug(nodePath().c_str(),_("Save module."));
+#endif
 
-    //> Save parameters to DB
-    TBDS::genDBSet( nodePath()+"StartPath", startPath() );
-    TBDS::genDBSet( nodePath()+"StartUser", startUser() );
+    //- Save parameters to DB -
+    TBDS::genDBSet(nodePath()+"StartPath", startPath());
+    TBDS::genDBSet(nodePath()+"StartUser", startUser());
 }
 
 void TUIMod::postEnable( int flag )
@@ -150,7 +153,7 @@ void TUIMod::postEnable( int flag )
 QIcon TUIMod::icon( )
 {
     QImage ico_t;
-    if(!ico_t.load(TUIS::icoGet("UI.QTCfg",NULL,true).c_str())) ico_t.load(":/images/oscada_cfg.png");
+    if(!ico_t.load(TUIS::icoPath("UI.QTCfg").c_str())) ico_t.load(":/images/oscada_cfg.png");
     return QPixmap::fromImage(ico_t);
 }
 
@@ -162,13 +165,13 @@ QMainWindow *TUIMod::openWindow( )
 	{
 	    DlgUser d_usr;
 	    int rez = d_usr.exec();
-	    if( rez == DlgUser::SelCancel )     return NULL;
-	    if( rez == DlgUser::SelErr )
+	    if(rez == DlgUser::SelCancel) return NULL;
+	    if(rez == DlgUser::SelErr)
 	    {
 		postMess(nodePath().c_str(),_("Auth is wrong!!!"));
 		continue;
 	    }
-	    user_open = d_usr.user().toAscii().data();
+	    user_open = d_usr.user().toStdString();
 	    break;
 	}
     return new ConfApp(user_open);
@@ -176,7 +179,9 @@ QMainWindow *TUIMod::openWindow( )
 
 void TUIMod::modStart( )
 {
-    mess_debug(nodePath().c_str(), _("Start module."));
+#if OSC_DEBUG >= 1
+    mess_debug(nodePath().c_str(),_("Start module."));
+#endif
 
     end_run = false;
     run_st  = true;
@@ -184,7 +189,9 @@ void TUIMod::modStart( )
 
 void TUIMod::modStop( )
 {
-    mess_debug(nodePath().c_str(), _("Stop module."));
+#if OSC_DEBUG >= 1
+    mess_debug(nodePath().c_str(),_("Stop module."));
+#endif
 
     end_run = true;
 
@@ -238,11 +245,7 @@ void TUIMod::cntrCmdProc( XMLNode *opt )
 	if(ctrChkNode(opt,"get",RWRWR_,"root",SUI_ID,SEC_RD))	opt->setText(startUser());
 	if(ctrChkNode(opt,"set",RWRWR_,"root",SUI_ID,SEC_WR))	setStartUser(opt->text());
     }
-    else if(a_path == "/prm/cfg/host_lnk" && ctrChkNode(opt,"get",RWRW__,"root",SUI_ID,SEC_RD))
-    {
-	SYS->transport().at().setSysHost(false);
-	opt->setText("/Transport");
-    }
+    else if(a_path == "/prm/cfg/host_lnk" && ctrChkNode(opt,"get",RWRW__,"root",SUI_ID,SEC_RD)) opt->setText("/Transport");
     else if(a_path == "/help/g_help" && ctrChkNode(opt,"get",R_R___,"root",SUI_ID))	opt->setText(optDescr());
     else if(a_path == "/prm/cfg/u_lst" && ctrChkNode(opt))
     {

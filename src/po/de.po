@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenSCADA 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-09-11 15:46+0300\n"
+"POT-Creation-Date: 2013-10-24 19:13+0300\n"
 "PO-Revision-Date: 2011-07-24 22:47+0400\n"
 "Last-Translator: Roman Savochenko <rom_as@oscada.org>\n"
 "Language-Team: German <de@li.org>\n"
@@ -62,17 +62,8 @@ msgstr "Zeitintervall für die Archivierung (Sek)"
 msgid "Source mode"
 msgstr "Quellenmodus"
 
-msgid "Passive;Passive param. attribute;Active param. attribute"
-msgstr "Passiv;Passives Parameterattribut;Aktives Parameterattribut"
-
 msgid "Source"
 msgstr "Quelle"
-
-msgid "Data combining mode"
-msgstr "Modus der Assoziation Daten"
-
-msgid "Moving average;Single;Minimum;Maximum"
-msgstr "Gleitender Durchschnitt;Einer;Minimum;Maximum"
 
 msgid "Value type"
 msgstr "Datentyp der Werte"
@@ -460,6 +451,15 @@ msgstr "Reele Zahl"
 msgid "String"
 msgstr "Text"
 
+msgid "Passive"
+msgstr "Passiv"
+
+msgid "Passive param. attribute"
+msgstr "Passives Parameterattribut"
+
+msgid "Active param. attribute"
+msgstr "Aktives Attribut des Parameters"
+
 msgid "Value archivator: "
 msgstr "Wertearchivar: "
 
@@ -799,16 +799,6 @@ msgstr "Optionen"
 msgid "To add parameters"
 msgstr "Optionen hinzufügen"
 
-msgid "Diagnostics"
-msgstr "Diagnostik"
-
-msgid ""
-"Get messages for level more and equal it.\n"
-"Also affect to specific-diagnostic messages generation by data source."
-msgstr ""
-"Empfang von Nachrichten für gleiche und höhere Stufe.\n"
-"Wirkt sich auch auf das Erzeugen der Datenquelle Diagnosemeldungen."
-
 msgid "Data acquisition"
 msgstr "Datenerfassung"
 
@@ -817,9 +807,6 @@ msgstr "Maximale Zeit der Berechnung (sek)"
 
 msgid "Template program"
 msgstr "Vorlagenprogramm"
-
-msgid "Date of modification"
-msgstr "Änderungsdatum"
 
 msgid "Template ID"
 msgstr "ID der Vorlage"
@@ -832,6 +819,10 @@ msgstr "Reale Stelle"
 
 msgid "Error"
 msgstr "Fehler"
+
+#: tdaqs.cpp:141
+msgid "=== Attributes ==="
+msgstr "=== Attribute ==="
 
 msgid "Load template's libraries error."
 msgstr "Fehler beim Laden der Vorlagenbibliotheken."
@@ -863,10 +854,20 @@ msgstr "Fehler beim Abschalten des Controllers '%s'."
 msgid "No parameter present '%s'."
 msgstr "Es gibt keine Option '%s'."
 
+#: tdaqs.cpp:470
+#, fuzzy, c-format
+msgid "Pointed node is not parameter '%s'."
+msgstr "Fehler beim Hinzufügen des Parameters '%s'."
+
 #, c-format
 msgid "No attribute present '%s'."
 msgstr "Es ist kein Attribut '%s'."
 
+#, c-format
+msgid "Pointed node is not attribute '%s'."
+msgstr ""
+
+#: tdaqs.cpp:673
 #, c-format
 msgid ""
 "=================== Subsystem \"Data acquisition\" options ================\n"
@@ -1610,7 +1611,6 @@ msgid ""
 "IcoDir     <path>\tIcons directory.\n"
 "ModDir     <path>\tModules directory.\n"
 "MessLev    <level>     Messages <level> (0-7).\n"
-"SelDebCats <list>\tDebug categories list (separated by ';').\n"
 "LogTarget  <direction> Direct messages to:\n"
 "                           <direct> & 1 - syslogd;\n"
 "                           <direct> & 2 - stdout;\n"
@@ -1650,7 +1650,6 @@ msgstr ""
 "IcoDir     <path>      Symbolverzeichnis.\n"
 "ModDir     <path>      Modulverzeichnis.\n"
 "MessLev    <level>     Nachrichtenstufe <level> von Nachrichten (0-7).\n"
-"SelDebCats <Liste>\tListe der Kategorien Debuggen (geteilt ';').\n"
 "LogTarget  <direction> Umleitung der Nachrichten in:\n"
 "                         <direction> & 1 - Systemlog (syslogd);\n"
 "                         <direction> & 2 - Standardausgang (stdout);\n"
@@ -1664,6 +1663,9 @@ msgstr ""
 
 #, c-format
 msgid "Config-file '%s' error: %s"
+msgstr "Konfigurationsdatei '%s' Fehler: %s"
+
+msgid "Config-file '%s' load error."
 msgstr "Konfigurationsdatei '%s' Fehler: %s"
 
 #, c-format
@@ -1746,13 +1748,12 @@ msgstr "Warte auf Ereignis..."
 msgid "Task '%s' is already present!"
 msgstr "Aufgabe '%s' ist schon geschafft!"
 
-#, c-format
 msgid ""
 "No permission for create real-time policy for '%s'. Default thread is "
 "created!"
 msgstr ""
-"Kein Zugang für das Schaffen der Realzeitpolitik für '%s'. Der Strom ist "
-"geschaffen default!"
+"Kein Zugang für das Schaffen der Realzeitpolitik für '%s'. Der Strom ist geschaffen "
+"default!"
 
 #, c-format
 msgid "Task creation error %d."
@@ -1812,9 +1813,6 @@ msgstr "Arbeitsverzeichnis"
 
 msgid "Icons directory"
 msgstr "Symbolverzeichnis"
-
-msgid "Separate directory paths with icons by symbol ';'."
-msgstr "Separate Verzeichnispfade mit Ikonen Symbol ';'."
 
 msgid "Modules directory"
 msgstr "Modulverzeichnis"
@@ -1905,24 +1903,15 @@ msgstr "Priorität"
 msgid "CPU set"
 msgstr "CPU Installation"
 
-msgid "Debug"
-msgstr "Debuggen"
-
 msgid "Counters"
 msgstr "Zähler"
-
-msgid "Debug categories"
-msgstr "Kategorien Debugging"
-
-msgid "See to messages"
-msgstr "Ansicht der Nachrichten"
 
 msgid "Finished. "
 msgstr "Finished. "
 
 #, c-format
-msgid "Last: %s. Load: %3.1f%% (%s from %s). Lag: %s. Cycles lost: %g."
-msgstr "Letzter: %s. Laden: %3.1f%% (%s von %s). Lag: %s. Verlust Zyklen: %g."
+msgid "Last: %s. Load: %3.1f%% (%s from %s). Lag: %s"
+msgstr "Letzter: %s. Laden: %3.1f%% (%s von %s). Lag: %s"
 
 msgid "Standard"
 msgstr "Standard"
@@ -2177,6 +2166,9 @@ msgstr "Nachkommen %d ist verboten."
 #, c-format
 msgid "2:Open file '%s' error: %s"
 msgstr "Fehler der Öffnung der Datei '%s' : %s"
+
+msgid "3:Load file '%s' error."
+msgstr "Fehler beim Anhahalten des Moduls '%s'."
 
 msgid "The object don't attached to node of OpenSCADA tree."
 msgstr "Das Objekt ist an den OpenSCADA-Baumknoten nicht angeschaltet."

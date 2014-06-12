@@ -45,7 +45,7 @@
 #define LICENSE		"GPL2"
 //*************************************************
 
-AMRDevs::TTpContr *AMRDevs::mod;  //Pointer for direct access to the module
+AMRDevs::TTpContr *AMRDevs::mod;  //Pointer for direct access to module
 
 extern "C"
 {

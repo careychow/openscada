@@ -71,9 +71,9 @@ class TMdPrm : public TParamContr
 	void cntrCmdProc( XMLNode *opt );	//Control interface command process
 	void setType( const string &tpId );
 
-	void vlGet( TVal &val );
-	void vlSet( TVal &val, const TVariant &pvl );
-	void vlArchMake( TVal &val );
+	void vlGet( TVal &vo );
+	void vlSet( TVal &vo, const TVariant &vl, const TVariant &pvl );
+	void vlArchMake( TVal &vo );
 
 	TMdContr &owner( );
 
@@ -140,7 +140,7 @@ class TMdContr: public TController
 
     protected:
 	//Methods
-	void prmEn( const string &id, bool val );
+	void prmEn( TMdPrm *p, bool val );
 	void postDisable( int flag );		//Delete all DB if flag 1
 
 	void load_( );
@@ -163,7 +163,7 @@ class TMdContr: public TController
 		endrun_req;			// Request to stop of the Process task
 	vector< AutoHD<TMdPrm> >  p_hd;
 
-	double	mPer;
+	double	mPer, tm_calc;			// Template functions calc time
 };
 
 //*************************************************

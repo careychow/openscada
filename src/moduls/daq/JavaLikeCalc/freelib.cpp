@@ -176,31 +176,29 @@ void Lib::cntrCmdProc( XMLNode *opt )
 	TCntrNode::cntrCmdProc(opt);
 	ctrMkNode("oscada_cntr",opt,-1,"/",_("Function's library: ")+id(),RWRWR_,"root",SDAQ_ID);
 	if(ctrMkNode("branches",opt,-1,"/br","",R_R_R_))
-	    ctrMkNode("grp",opt,-1,"/br/fnc_",_("Function"),RWRWR_,"root",SDAQ_ID,2,"idm","1","idSz","20");
+	    ctrMkNode("grp",opt,-1,"/br/fnc_",_("Function"),RWRWR_,"root",SDAQ_ID,2,"idm",OBJ_NM_SZ,"idSz",OBJ_ID_SZ);
 	if(ctrMkNode("area",opt,-1,"/lib",_("Library")))
 	{
 	    if(ctrMkNode("area",opt,-1,"/lib/st",_("State")))
 	    {
 		ctrMkNode("fld",opt,-1,"/lib/st/st",_("Accessing"),RWRWR_,"root",SDAQ_ID,1,"tp","bool");
 		if(DB().size())
-		{
 		    ctrMkNode("fld",opt,-1,"/lib/st/db",_("Library DB"),RWRWR_,"root",SDAQ_ID,4,
 			"tp","str","dest","sel_ed","select",("/db/tblList:flb_"+id()).c_str(),
 			"help",_("DB address in format [<DB module>.<DB name>.<Table name>].\nFor use main work DB set '*.*'."));
-		    ctrMkNode("fld",opt,-1,"/lib/st/timestamp",_("Date of modification"),R_R_R_,"root",SDAQ_ID,1,"tp","time");
-		}
 	    }
 	    if(ctrMkNode("area",opt,-1,"/lib/cfg",_("Configuration")))
 	    {
 		ctrMkNode("fld",opt,-1,"/lib/cfg/id",_("Id"),R_R_R_,"root",SDAQ_ID,1,"tp","str");
-		ctrMkNode("fld",opt,-1,"/lib/cfg/name",_("Name"),DB().empty()?R_R_R_:RWRWR_,"root",SDAQ_ID,2,"tp","str","len","50");
+		ctrMkNode("fld",opt,-1,"/lib/cfg/name",_("Name"),DB().empty()?R_R_R_:RWRWR_,"root",SDAQ_ID,2,"tp","str","len",OBJ_NM_SZ);
 		ctrMkNode("fld",opt,-1,"/lib/cfg/descr",_("Description"),DB().empty()?R_R_R_:RWRWR_,"root",SDAQ_ID,3,"tp","str","cols","100","rows","5");
 		if(!DB().empty())
 		    ctrMkNode("fld",opt,-1,"/lib/cfg/progTr",_("Program's text translation"),RWRWR_,"root",SDAQ_ID,1,"tp","bool");
 	    }
 	}
 	if(ctrMkNode("area",opt,-1,"/func",_("Functions")))
-	    ctrMkNode("list",opt,-1,"/func/func",_("Functions"),RWRWR_,"root",SDAQ_ID,5,"tp","br","idm","1","s_com","add,del","br_pref","fnc_","idSz","20");
+	    ctrMkNode("list",opt,-1,"/func/func",_("Functions"),RWRWR_,"root",SDAQ_ID,5,
+		"tp","br","idm",OBJ_NM_SZ,"s_com","add,del","br_pref","fnc_","idSz",OBJ_ID_SZ);
 	return;
     }
 
@@ -215,14 +213,6 @@ void Lib::cntrCmdProc( XMLNode *opt )
     {
 	if(ctrChkNode(opt,"get",RWRWR_,"root",SDAQ_ID,SEC_RD))	opt->setText(fullDB());
 	if(ctrChkNode(opt,"set",RWRWR_,"root",SDAQ_ID,SEC_WR))	setFullDB(opt->text());
-    }
-    else if(a_path == "/lib/st/timestamp" && ctrChkNode(opt))
-    {
-        vector<string> tls;
-        list(tls);
-        time_t maxTm = 0;
-        for(int i_t = 0; i_t < tls.size(); i_t++) maxTm = vmax(maxTm, at(tls[i_t]).at().timeStamp());
-        opt->setText(TSYS::int2str(maxTm));
     }
     else if(a_path == "/lib/cfg/id" && ctrChkNode(opt))		opt->setText(id());
     else if(a_path == "/lib/cfg/name")

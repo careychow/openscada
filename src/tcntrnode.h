@@ -1,7 +1,7 @@
 
 //OpenSCADA system file: tcntrnode.h
 /***************************************************************************
- *   Copyright (C) 2003-2010 by Roman Savochenko                           *
+ *   Copyright (C) 2003-2014 by Roman Savochenko                           *
  *   rom_as@oscada.org, rom_as@fromru.com                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -106,14 +106,18 @@ class TCntrNode
 
 	void cntrCmd( XMLNode *opt, int lev = 0, const string &path = "", int off = 0 );
 
-	//> Static functions
-	//>> Controll Field
-	static XMLNode *ctrId( XMLNode *inf, const string &n_id, bool noex = false );      //get node for it full identifier
+	// Static functions
+	//  Controll Field
+	static XMLNode *ctrId( XMLNode *inf, const string &n_id, bool noex = false );		//get node for it full identifier
 	static XMLNode *ctrMkNode( const char *n_nd, XMLNode *nd, int pos, const char *req, const string &dscr,
-	    int perm=0777, const char *user="root", const char *grp="root", int n_attr=0, ... );
+	    int perm = 0777, const char *user = "root", const char *grp = "root", int n_attr = 0, ... );
+	static XMLNode *ctrMkNode2( const char *n_nd, XMLNode *nd, int pos, const char *req, const string &dscr,
+	    int perm = 0777, const char *user = "root", const char *grp = "root", ... );	//End by zero pointer
+	static XMLNode *_ctrMkNode( const char *n_nd, XMLNode *nd, int pos, const char *req, const string &dscr,
+	    int perm = 0777, const char *user = "root", const char *grp = "root" );
 	static bool ctrRemoveNode( XMLNode *nd, const char *path );
-	static bool ctrChkNode( XMLNode *nd, const char *cmd="get", int perm=0444, const char *user="root",
-	    const char *grp="root", char mode=04, const char *warn = NULL );
+	static bool ctrChkNode( XMLNode *nd, const char *cmd = "get", int perm = 0444, const char *user = "root",
+	    const char *grp = "root", char mode = 04, const char *warn = NULL );
 
     protected:
 	//Methods
@@ -124,15 +128,14 @@ class TCntrNode
 	//Data
 	enum Flag
 	{
-	    //> Modes
+	    // Modes
 	    MkDisable	= 0x00,		//Node make disable
 	    Disable	= 0x01,		//Node disabled
 	    MkEnable	= 0x02,		//Node make enable
 	    Enable	= 0x03,		//Node enabled
-	    //> Flags
+	    // Flags
 	    SelfModify	= 0x04,		//Self modify
-	    SelfModifyS = 0x08,		//Self modify store
-	    SelfSaveForceOnChild = 0x10	//Save force on childs modify flag set
+	    SelfModifyS	= 0x08		//Self modify store
 	};
 	enum EnFlag
 	{
@@ -145,7 +148,7 @@ class TCntrNode
 	//Methods
 	virtual Res &nodeRes( )		{ return hd_res; }
 	virtual const char *nodeName( ) = 0;
-	string nodePath( char sep = 0, bool from_root = true );
+	string nodePath( char sep = 0, bool from_root = false );
 
 	void nodeList( vector<string> &list, const string& gid = "" );				//Full node list
 	AutoHD<TCntrNode> nodeAt( const string &path, int lev = 0, char sep = 0, int off = 0, bool noex = false );	//Get node for full path
@@ -153,31 +156,32 @@ class TCntrNode
 	static void nodeCopy( const string &src, const string &dst, const string &user = "root" );
 
 	TCntrNode *nodePrev( bool noex = false );
-	char	 nodeFlg( )		{ return m_flg; }
-	void	 setNodeFlg( char flg );
-	char	 nodeMode( )		{ return m_flg&0x3; }
+	char	 nodeFlg( )		{ return mFlg; }
+	char	 nodeMode( )		{ return mFlg&0x3; }
 	unsigned nodeUse( bool selfOnly = false );
 	unsigned nodePos( )		{ return mOi; }
 
-	//> Modify process methods
+	// Modify process methods
 	int  isModify( int mflg = TCntrNode::All );	//Check for modify want
 	void modif( bool save = false );		//Set local modify
 	void modifG( );					//Set group modify
 	void modifClr( bool save = false );		//Clear modify
 	void modifGClr( );				//Modify group clear
 	void load( bool force = false );		//Load node, if modified
-	void save( unsigned lev = 0 );			//Save node, if modified
+	void save( );					//Save node, if modified
 
-	//> Connections counter
+	// Connections counter
 	virtual void AHDConnect( );
 	virtual bool AHDDisConnect( );
 
-	//> User object access
+	// User object access
 	virtual TVariant objPropGet( const string &id );
 	virtual void objPropSet( const string &id, TVariant val );
 	virtual TVariant objFuncCall( const string &id, vector<TVariant> &prms, const string &user );
 
-	//> Childs
+	// Childs
+	int8_t	grpSize( );
+	int8_t	grpId( const string &sid );
 	virtual AutoHD<TCntrNode> chldAt( int8_t igr, const string &name, const string &user = "" );
 	void chldList( int8_t igr, vector<string> &list, bool noex = false );
 	bool chldPresent( int8_t igr, const string &name );
@@ -192,7 +196,7 @@ class TCntrNode
 	};
 
 	//Methods
-	//> Commands
+	// Commands
 	void nodeEn( int flag = 0 );
 	void nodeDis( long tm = 0, int flag = 0 );
 
@@ -201,15 +205,11 @@ class TCntrNode
 	void setNodePrev( TCntrNode *node )	{ prev.node = node; }
 	void setNodeMode( char mode );
 
-	//> Childs
-	virtual void chldAdd( int8_t igr, TCntrNode *node, int pos = -1, bool noExp = false );
-	void chldDel( int8_t igr, const string &name, long tm = -1, int flag = 0, bool shDel = false );
-
-	//> Conteiners
-	int8_t	grpSize( );
-	int8_t	grpId( const string &sid );
+	// Childs and containers
 	GrpEl	&grpAt( int8_t id );
 	unsigned grpAdd( const string &id, bool ordered = false );
+	virtual void chldAdd( int8_t igr, TCntrNode *node, int pos = -1, bool noExp = false );
+	void chldDel( int8_t igr, const string &name, long tm = -1, int flag = 0, bool shDel = false );
 
 	virtual void preEnable( int flag )	{ }
 	virtual void postEnable( int flag )	{ }
@@ -229,17 +229,17 @@ class TCntrNode
 	} prev;
 
 	//Attributes
-	//> Childs
+	// Childs
 	Res			hd_res;	//Resource HD
 	static pthread_mutex_t	connM;	//Connection mutex
 
 	vector<GrpEl>		*chGrp;	//Child groups
 
-	//> Curent node
+	// Curent node
 	unsigned short int	mUse;	//Use counter
 	unsigned short int	mOi;	//Order index
 
-	char	m_flg;
+	char	mFlg;
 };
 //#pragma pack(pop)
 

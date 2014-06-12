@@ -26,8 +26,8 @@
 #include <tvariant.h>
 #include <tconfig.h>
 
-#define ATTR_OI_DEPTH	10	//Order index field depth = real limit to attributes
-#define ATTR_CON_DEPTH	6	//Connection counter depth = simultaneously connections to single attribute
+#define ATTR_OI_DEPTH	8	//Order index field depth = real limit to attributes
+#define ATTR_CON_DEPTH	8	//Connection counter depth = simultaneously connections to single attribute
 
 using namespace OSCADA;
 
@@ -250,7 +250,6 @@ class Widget : public TCntrNode
 	virtual TVariant vlGet( Attr &a );
 	virtual TVariant stlReq( Attr &a, const TVariant &vl, bool wr );
 
-	virtual void disable( Widget *base );
 	virtual void calc( Widget *base );
 	virtual TVariant objFuncCall_w( const string &id, vector<TVariant> &prms, const string &user, Widget *src = NULL );
 

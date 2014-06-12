@@ -168,7 +168,6 @@ class TVArchive : public TCntrNode, public TValBuf, public TConfig
     public:
 	//Public data
 	enum SrcMode { SaveCur = -1, Passive = 0, PassiveAttr, ActiveAttr };
-	enum CombMode { MovAver = 0, LastVal, MinVal, MaxVal };
 
 	//Public methods
 	TVArchive( const string &id, const string &db, TElem *cf_el );
@@ -182,7 +181,6 @@ class TVArchive : public TCntrNode, public TValBuf, public TConfig
 	string	dscr( )		{ return cfg("DESCR").getS(); }
 	SrcMode	srcMode( )	{ return (TVArchive::SrcMode)mSrcMode.getI(); }
 	string	srcData( )	{ return mSource; }
-	CombMode combMode( )	{ return (TVArchive::CombMode)mCombMode.getI(); }
 	AutoHD<TVal> srcPAttr( bool force = false, const string &ipath = "" );
 	bool toStart( )  	{ return mStart; }
 	bool startStat( )	{ return runSt; }
@@ -202,7 +200,6 @@ class TVArchive : public TCntrNode, public TValBuf, public TConfig
 	void setName( const string &inm )	{ cfg("NAME").setS(inm); }
 	void setDscr( const string &idscr )	{ cfg("DESCR").setS(idscr); }
 	void setSrcMode( SrcMode vl = SaveCur, const string &isrc = "<*>", bool noex = false );
-	void setCombMode( CombMode vl )		{ mCombMode = (int)vl; }
 	void setToStart( bool vl )		{ mStart = vl; modif(); }
 
 	void setDB( const string &idb )		{ mDB = idb; modifG(); }
@@ -233,7 +230,8 @@ class TVArchive : public TCntrNode, public TValBuf, public TConfig
 	void archivatorDetach( const string &arch, bool full = false, bool toModify = true );
 	void archivatorSort( );
 
-	string makeTrendImg( int64_t beg, int64_t end, const string &arch, int hsz = 650, int vsz = 230, double valmax = 0, double valmin = 0 );
+	string makeTrendImg( int64_t beg, int64_t end, const string &arch,
+	    int hsz = 650, int vsz = 230, double valmax = 0, double valmin = 0, string *tp = NULL );
 
 	TArchiveS &owner( );
 
@@ -263,7 +261,6 @@ class TVArchive : public TCntrNode, public TValBuf, public TConfig
 	TCfg	&mId,		//ID
 		&mSrcMode,	//Source mode
 		&mSource,	//Source
-		&mCombMode,	//Data combining mode (Moving average, Single, Minimum, Maximum)
 		&mBPer,		//Buffer period
 		&mBSize;	//Buffer size
 
@@ -277,7 +274,6 @@ class TVArchive : public TCntrNode, public TValBuf, public TConfig
 	//> Phisical archive's elements
 	vector<TVArchEl*> arch_el;	//Links
 };
-
 
 //*************************************************
 //* TVArchivator                                  *
@@ -397,7 +393,7 @@ class TVArchEl
 	//Protected methods
 	virtual TVariant getValProc( int64_t *tm, bool up_ord );
 	virtual void getValsProc( TValBuf &buf, int64_t beg, int64_t end )	{ }
-	virtual void setValsProc( TValBuf &buf, int64_t beg, int64_t end )	{ }
+	virtual bool setValsProc( TValBuf &buf, int64_t beg, int64_t end )	{ return false; }
 
 	//> Previous averaging value
 	int64_t	prev_tm;

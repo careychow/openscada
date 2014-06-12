@@ -42,7 +42,7 @@
 #define MOD_LICENSE	"MyLicense"
 //************************************************
 
-BDTmpl::BDMod *BDTmpl::mod; //Pointer for direct access to the module
+BDTmpl::BDMod *BDTmpl::mod; //Pointer for direct access to module
 
 //!!! Required section for binding OpenSCADA core to this module. It gives information and creates module root object.
 //!!! Do not remove this section!
@@ -202,8 +202,8 @@ void MBD::cntrCmdProc( XMLNode *opt )
     if( opt->name() == "info" )
     {
 	TBD::cntrCmdProc(opt);
-	ctrMkNode("fld",opt,-1,"/prm/cfg/addr",cfg("ADDR").fld().descr(),enableStat()?R_R___:RWRW__,"root",SDB_ID,2,
-	    "tp","str","help",_("!!! Type here the help information about the db address of your module"));
+	ctrMkNode("fld",opt,-1,"/prm/cfg/ADDR",EVAL_STR,enableStat()?R_R___:RWRW__,"root",SDB_ID,1,
+	    "help",_("!!! Type here the help information about the db address of your module"));
 	return;
     }
     TBD::cntrCmdProc(opt);

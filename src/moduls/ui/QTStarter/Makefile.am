@@ -1,26 +1,22 @@
 EXTRA_DIST = *.h qtstarter.qrc images/* po/*
 
-if QTStarterIncl
-noinst_LTLIBRARIES = ui_QTStarter.la
-ui_QTStarter_la_CXXFLAGS = -DMOD_INCL -fpic
-ui_QTStarter_la_LIBTOOLFLAGS = --tag=disable-shared
-else
 oscd_modul_LTLIBRARIES = ui_QTStarter.la
-ui_QTStarter_la_CXXFLAGS =
-ui_QTStarter_la_LIBTOOLFLAGS = --tag=disable-static
-endif
-
-ui_QTStarter_la_CXXFLAGS += $(QtGui_CFLAGS)
+ui_QTStarter_la_CXXFLAGS = $(QtGui_CFLAGS)
 ui_QTStarter_la_LDFLAGS = -module -avoid-version -no-undefined
 ui_QTStarter_la_SOURCES = tuimod.cpp moc_tuimod.cpp qrc_qtstarter.cpp
 ui_QTStarter_la_DIST = tuimod.cpp qtstarter.qrc
 ui_QTStarter_la_LIBADD = $(QtGui_LIBS)
+ui_QTStarter_la_LIBTOOLFLAGS = --tag=disable-static
 
+if QTStarterIncl
+ui_QTStarter_la_CXXFLAGS += -DMOD_INCL
+install:
+endif
 
 qrc_qtstarter.cpp: qtstarter.qrc
-	$(QT4_RCC) -name QTStarter qtstarter.qrc -o qrc_qtstarter.cpp
+	$(Qt_RCC) -name QTStarter qtstarter.qrc -o qrc_qtstarter.cpp
 moc_tuimod.cpp: tuimod.h
-	$(QT4_MOC) tuimod.h > moc_tuimod.cpp
+	$(Qt_MOC) tuimod.h > moc_tuimod.cpp
 
 I18N_mod = $(oscd_modulpref)QTStarter
 include ../../../../I18N.mk

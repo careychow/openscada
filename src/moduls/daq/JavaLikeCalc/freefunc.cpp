@@ -38,7 +38,7 @@ Func *JavaLikeCalc::p_fnc;
 //*************************************************
 Func::Func( const string &iid, const string &name ) :
     TConfig(&mod->elFnc()), TFunction(iid,SDAQ_ID),
-    max_calc_tm(cfg("MAXCALCTM").getId()), mTimeStamp(cfg("TIMESTAMP").getId()), parse_res(mod->parseRes())
+    max_calc_tm(cfg("MAXCALCTM").getId()), parse_res(mod->parseRes())
 {
     cfg("ID").setS(id());
     cfg("NAME").setS(name.empty() ? id() : name);
@@ -183,7 +183,6 @@ void Func::save_( )
     if( owner().DB().empty() )  return;
 
     cfg("FORMULA").setNoTransl(!owner().progTr());
-    mTimeStamp = SYS->sysTm();
     SYS->db().at().dataSet(owner().fullDB(),mod->nodePath()+owner().tbl(),*this);
 
     //> Save io config
@@ -240,51 +239,11 @@ void Func::delIO( )
     SYS->db().at().dataDel(owner().fullDB()+"_io",mod->nodePath()+owner().tbl()+"_io",cfg);
 }
 
-void Func::valAtt( TValFunc *vfnc )
-{
-    TFunction::valAtt(vfnc);
-    workRegControl(vfnc);
-}
-
-void Func::valDet( TValFunc *vfnc )
-{
-    TFunction::valDet(vfnc);
-    workRegControl(vfnc, true);
-}
-
-void Func::workRegControl( TValFunc *vfnc, bool toFree )
-{
-    if(vfnc->exCtx)
-    {
-	delete [] (RegW*)vfnc->exCtx;
-	vfnc->exCtx = NULL;
-    }
-    if(!toFree && mRegs.size())
-    {
-	vfnc->exCtx = new RegW[mRegs.size()];
-	RegW *reg = (RegW*)vfnc->exCtx;
-	//> Init list of registers
-	for(unsigned i_rg = 0; i_rg < mRegs.size(); i_rg++)
-	    switch(mRegs[i_rg]->type())
-	    {
-		case Reg::Var:
-		    reg[i_rg].setType(Reg::Var);
-		    reg[i_rg].val().io = mRegs[i_rg]->val().io;
-		    break;
-		case Reg::PrmAttr:
-		    reg[i_rg].setType(Reg::PrmAttr);
-		    *reg[i_rg].val().p_attr = *mRegs[i_rg]->val().p_attr;
-		    break;
-		default:	break;
-	    }
-    }
-}
-
 void Func::setStart( bool val )
 {
     if(val == run_st) return;
     //> Start calc
-    if(val)
+    if( val )
     {
 	progCompile( );
 	run_st = true;
@@ -354,10 +313,6 @@ void Func::progCompile( )
     }
     sprg.clear();
     regTmpClean( );
-
-    //> Work registers update for calc contexts
-    for(unsigned i = 0; i < used.size(); i++)
-	workRegControl(used[i]);
 }
 
 int Func::funcGet( const string &path )
@@ -608,9 +563,9 @@ Reg *Func::cdMviRegExp( int p_cnt )
 Reg *Func::cdTypeConv( Reg *op, Reg::Type tp, bool no_code )
 {
     Reg *rez = op;
-    if( rez->pos() < 0 )
+    if(rez->pos() < 0)
     {
-	if( tp != rez->vType(this) )
+	if(tp != rez->vType(this))
 	    switch(tp)
 	    {
 		case Reg::Bool:
@@ -662,13 +617,13 @@ Reg *Func::cdTypeConv( Reg *op, Reg::Type tp, bool no_code )
 		    switch(rez->vType(this))
 		    {
 			case Reg::Bool:
-			    *rez = (rez->val().b_el != EVAL_BOOL) ? TSYS::int2str(rez->val().b_el) : EVAL_STR;
+			    *rez = (rez->val().b_el != EVAL_BOOL) ? i2s(rez->val().b_el) : EVAL_STR;
 			    break;
 			case Reg::Int:
-			    *rez = (rez->val().i_el != EVAL_INT) ? TSYS::int2str(rez->val().i_el) : EVAL_STR;
+			    *rez = (rez->val().i_el != EVAL_INT) ? i2s(rez->val().i_el) : EVAL_STR;
 			    break;
 			case Reg::Real:
-			    *rez = (rez->val().r_el != EVAL_REAL) ? TSYS::real2str(rez->val().r_el) : EVAL_STR;
+			    *rez = (rez->val().r_el != EVAL_REAL) ? r2s(rez->val().r_el) : EVAL_STR;
 			    break;
 			default: break;
 		    }
@@ -1082,29 +1037,34 @@ Reg *Func::cdExtFnc( int f_id, int p_cnt, bool proc )
     Reg *rez = NULL;
     deque<int> p_pos;
 
-    //> Check return IO position
+    //Check return IO position
     bool ret_ok = false;
-    for( r_pos = 0; r_pos < funcAt(f_id)->func().at().ioSize(); r_pos++ )
-	if( funcAt(f_id)->func().at().io(r_pos)->flg()&IO::Return )
-	{ ret_ok=true; break; }
-    //> Check IO and parameters count
-    if( p_cnt > funcAt(f_id)->func().at().ioSize()-ret_ok )
-        throw TError(nodePath().c_str(),_("More than %d(%d) parameters are specified for function '%s'"),
-	    (funcAt(f_id)->func().at().ioSize()-ret_ok),p_cnt,funcAt(f_id)->func().at().id().c_str());
-    //> Check the present return for fuction
+    for(r_pos = 0; r_pos < funcAt(f_id)->func().at().ioSize(); r_pos++)
+	if((ret_ok=(bool)(funcAt(f_id)->func().at().io(r_pos)->flg()&IO::Return)))
+	    break;
+
+    //Check IO and parameters count
+    if(p_cnt > funcAt(f_id)->func().at().ioSize()-ret_ok)
+	throw TError(nodePath().c_str(), _("More than %d(%d) parameters are specified for function '%s'"),
+	    (funcAt(f_id)->func().at().ioSize()-ret_ok), p_cnt, funcAt(f_id)->func().at().id().c_str());
+
+    //Check the present return for fuction
     if( !proc && !ret_ok )
 	throw TError(nodePath().c_str(),_("Function is requested '%s', but it doesn't have return of IO"),funcAt(f_id)->func().at().id().c_str());
-    //> Mvi all parameters
+
+    //Mvi all parameters
     for( int i_prm = 0; i_prm < p_cnt; i_prm++ )
 	f_prmst[i_prm] = cdMvi( f_prmst[i_prm] );
-    //> Get parameters. Add check parameters type !!!!
+
+    //Get parameters. Add check parameters type !!!!
     for( int i_prm = 0; i_prm < p_cnt; i_prm++ )
     {
 	p_pos.push_front( f_prmst.front()->pos() );
 	f_prmst.front()->free();
 	f_prmst.pop_front();
     }
-    //> Make result
+
+    //Make result
     if( !proc )
     {
 	rez = regAt(regNew());
@@ -1118,7 +1078,7 @@ Reg *Func::cdExtFnc( int f_id, int p_cnt, bool proc )
 	}
     }
 
-    //> Make code
+    //Make code
     uint16_t addr;
     prg += proc ? (uint8_t)Reg::CProc : (uint8_t)Reg::CFunc;
     prg += (uint8_t)f_id;
@@ -1232,24 +1192,24 @@ TVariant Func::oFuncCall( TVariant &vl, const string &prop, vector<TVariant> &pr
 	    case TVariant::Object:	return vl.getO().at().funcCall(prop, prms);
 	    case TVariant::Boolean:
 		// bool isEVal( ) - check value to "EVAL"
-		if( prop == "isEVal" )	return (vl.getB() == EVAL_BOOL);
+		if(prop == "isEVal")	return (vl.getB() == EVAL_BOOL);
 		// string toString( ) - performs the value as the string “true” or “false”
-		if( prop == "toString" )return string(vl.getB() ? "true" : "false");
+		if(prop == "toString")	return string(vl.getB() ? "true" : "false");
 		return false;
 		//throw TError(nodePath().c_str(),_("Boolean type have not function '%s' or not enough parameters for it."),prop.c_str());
 	    case TVariant::Integer:
 		// bool isEVal( ) - check value to "EVAL"
-		if( prop == "isEVal" )	return (vl.getI() == EVAL_INT);
+		if(prop == "isEVal")	return (vl.getI() == EVAL_INT);
 	    case TVariant::Real:
 		// bool isEVal( ) - check value to "EVAL"
-		if( prop == "isEVal" )	return (vl.getR() == EVAL_REAL);
+		if(prop == "isEVal")	return (vl.getR() == EVAL_REAL);
 		// string toExponential(int numbs = -1) - return the string of the number, formatted in exponential notation, 
 		//      and with the number of significant digits <numbs>
 		//  numbs - number of significant digits, if is missing the number of digits will have as much as needed
-		if( prop == "toExponential" )
+		if(prop == "toExponential")
 		{
 		    int n = prms.size() ? vmax(0,vmin(20,prms[0].getI())) : -1;
-		    if( n < 0 )	return TSYS::strMess("%e",vl.getR());
+		    if(n < 0) return TSYS::strMess("%e",vl.getR());
 		    return TSYS::strMess("%.*e",n,vl.getR());
 		}
 		// string toFixed(int numbs = 0, int len = 0, bool sign = false) - return the string of the number, formatted in the notation of fixed-point,
@@ -1315,7 +1275,7 @@ TVariant Func::oFuncCall( TVariant &vl, const string &prop, vector<TVariant> &pr
 		}
 		// string concat(string val1, string val2, ...) - returns a new string formed by joining the values <val1> etc
 		//  val1, val2 - appended values
-		if( prop == "concat" && prms.size() )
+		if(prop == "concat" && prms.size())
 		{
 		    string rez = vl.getS();
 		    for(unsigned i_p = 0; i_p < prms.size(); i_p++)
@@ -1326,7 +1286,7 @@ TVariant Func::oFuncCall( TVariant &vl, const string &prop, vector<TVariant> &pr
 		//       row from the position <start>
 		//  substr - requested substring value
 		//  start - start position for search
-		if( prop == "indexOf" && prms.size() )
+		if(prop == "indexOf" && prms.size())
 		{
 		    size_t sp = 0;
 		    if(prms.size() > 1) sp = vmax(0,vmin(vl.getS().size()-1,(unsigned)prms[1].getI()));
@@ -1337,7 +1297,7 @@ TVariant Func::oFuncCall( TVariant &vl, const string &prop, vector<TVariant> &pr
 		//       one beginning from the position of <start> when searching from the end
 		//  substr - requested substring value
 		//  start - start position for search from end
-		if( prop == "lastIndexOf" && prms.size() )
+		if(prop == "lastIndexOf" && prms.size())
 		{
 		    size_t sp = string::npos;
 		    if(prms.size() > 1) sp = vmax(0,vmin(vl.getS().size()-1,(unsigned)prms[1].getI()));
@@ -1376,7 +1336,7 @@ TVariant Func::oFuncCall( TVariant &vl, const string &prop, vector<TVariant> &pr
 		//       and ending be the <end>
 		//  beg - begin position
 		//  end - end position
-		if( (prop == "slice" || prop == "substring") && prms.size() )
+		if((prop == "slice" || prop == "substring") && prms.size())
 		{
 		    int beg = prms[0].getI();
 		    if(beg < 0) beg = vl.getS().size()+beg;
@@ -1393,7 +1353,7 @@ TVariant Func::oFuncCall( TVariant &vl, const string &prop, vector<TVariant> &pr
 		//  limit - items limit
 		// Array split(RegExp pat, int limit) - return the array of strings separated by RegExp pattern <pat> with the limit of the number of elements <limit>.
 		//  pat - regular expression pattern.
-		if( prop == "split" && prms.size() )
+		if(prop == "split" && prms.size())
 		{
 		    //> Use RegExp for split
 		    if(prms[0].type() == TVariant::Object && !AutoHD<TRegExp>(prms[0].getO()).freeStat())
@@ -1406,7 +1366,7 @@ TVariant Func::oFuncCall( TVariant &vl, const string &prop, vector<TVariant> &pr
 			if(prms.size() > 1 && rez->size() >= prms[1].getI()) break;
 			posC = vl.getS().find(prms[0].getS(),posB);
 			if(posC != posB)
-			    rez->propSet(TSYS::int2str(i_p), vl.getS().substr(posB,posC-posB));
+			    rez->arSet(i_p, vl.getS().substr(posB,posC-posB));
 			if(posC == string::npos) break;
 			posB = posC + prms[0].getS().size();
 		    }
@@ -1415,7 +1375,7 @@ TVariant Func::oFuncCall( TVariant &vl, const string &prop, vector<TVariant> &pr
 		// string insert(int pos, string substr) - insert substring <substr> into this string's position <pos>
 		//  pos - position for insert
 		//  substr - substring for insert
-		if( prop == "insert" && prms.size() >= 2 )
+		if(prop == "insert" && prms.size() >= 2)
 		    return vl.getS().insert(vmax(0,vmin(vl.getS().size(),(unsigned)prms[0].getI())), prms[1].getS() );
 		// string replace(int pos, int n, string str) - replace substring into position <pos> and length <n> to string <str>.
 		//  pos - position for start replace
@@ -1480,7 +1440,7 @@ TVariant Func::oFuncCall( TVariant &vl, const string &prop, vector<TVariant> &pr
 		// string path2sep(string sep = ".") - convert path into this string to separated by <sep> string.
 		//  sep - item separator
 		if(prop == "path2sep")
-		    return TSYS::path2sepstr( vl.getS(), (prms.size() && prms[0].getS().size()) ? prms[0].getS()[0] : '.' );
+		    return TSYS::path2sepstr(vl.getS(), (prms.size() && prms[0].getS().size()) ? prms[0].getS()[0] : '.');
 
 		return false;
 		//throw TError(nodePath().c_str(),_("String type have not properties '%s' or not enough parameters for it."),prop.c_str());
@@ -1530,11 +1490,11 @@ TVariant Func::getVal( TValFunc *io, RegW &rg, bool fObj )
 	default: break;
     }
 
-    for(int i_p = 0; i_p < rg.propSize(); i_p++)
+    for(unsigned i_p = 0; i_p < rg.props().size(); i_p++)
     {
-	if(fObj && i_p == (rg.propSize()-1)) break;
-	if(vl.isNull()) return false;	//throw TError(nodePath().c_str(),_("Value error. Get property from null value try."));
-	vl = oPropGet(vl,rg.propGet(i_p));
+	if(fObj && i_p == (rg.props().size()-1)) break;
+	if(vl.isNull())	return TVariant();	//Null //return false;
+	vl = oPropGet(vl, rg.props()[i_p]);
     }
 
     return vl;
@@ -1542,12 +1502,12 @@ TVariant Func::getVal( TValFunc *io, RegW &rg, bool fObj )
 
 string Func::getValS( TValFunc *io, RegW &rg )
 {
-    if(rg.propEmpty())
+    if(rg.props().empty())
 	switch(rg.type())
 	{
-	    case Reg::Bool:	return (rg.val().b_el != EVAL_BOOL) ? TSYS::int2str((bool)rg.val().b_el) : EVAL_STR;
-	    case Reg::Int:	return (rg.val().i_el != EVAL_INT) ? TSYS::int2str(rg.val().i_el) : EVAL_STR;
-	    case Reg::Real:	return (rg.val().r_el != EVAL_REAL) ? TSYS::real2str(rg.val().r_el) : EVAL_STR;
+	    case Reg::Bool:	return (rg.val().b_el != EVAL_BOOL) ? i2s((bool)rg.val().b_el) : EVAL_STR;
+	    case Reg::Int:	return (rg.val().i_el != EVAL_INT) ? i2s(rg.val().i_el) : EVAL_STR;
+	    case Reg::Real:	return (rg.val().r_el != EVAL_REAL) ? r2s(rg.val().r_el) : EVAL_STR;
 	    case Reg::String:	return *rg.val().s_el;
 	    case Reg::Var:	return io->getS(rg.val().io);
 	    case Reg::PrmAttr:	return rg.val().p_attr->at().getS();
@@ -1561,7 +1521,7 @@ string Func::getValS( TValFunc *io, RegW &rg )
 
 int Func::getValI( TValFunc *io, RegW &rg )
 {
-    if(rg.propEmpty())
+    if(rg.props().empty())
 	switch(rg.type())
 	{
 	    case Reg::Bool:	return (rg.val().b_el != EVAL_BOOL) ? (bool)rg.val().b_el : EVAL_INT;
@@ -1580,7 +1540,7 @@ int Func::getValI( TValFunc *io, RegW &rg )
 
 double Func::getValR( TValFunc *io, RegW &rg )
 {
-    if(rg.propEmpty())
+    if(rg.props().empty())
 	switch(rg.type())
 	{
 	    case Reg::Bool:	return (rg.val().b_el != EVAL_BOOL) ? (bool)rg.val().b_el : EVAL_REAL;
@@ -1599,7 +1559,7 @@ double Func::getValR( TValFunc *io, RegW &rg )
 
 char Func::getValB( TValFunc *io, RegW &rg )
 {
-    if(rg.propEmpty())
+    if(rg.props().empty())
 	switch(rg.type())
 	{
 	    case Reg::Bool:	return rg.val().b_el;
@@ -1618,7 +1578,7 @@ char Func::getValB( TValFunc *io, RegW &rg )
 
 AutoHD<TVarObj> Func::getValO( TValFunc *io, RegW &rg )
 {
-    if(rg.propEmpty())
+    if(rg.props().empty())
     {
 	switch(rg.type())
 	{
@@ -1634,7 +1594,7 @@ AutoHD<TVarObj> Func::getValO( TValFunc *io, RegW &rg )
 
 void Func::setVal( TValFunc *io, RegW &rg, const TVariant &val )
 {
-    if(rg.propEmpty())
+    if(rg.props().empty())
 	switch(rg.type())
 	{
 	    case Reg::Var:
@@ -1674,15 +1634,15 @@ void Func::setVal( TValFunc *io, RegW &rg, const TVariant &val )
     else if(rg.type() == Reg::Obj)
     {
 	TVariant vl(*rg.val().o_el);
-	for(int i_p = 0; i_p < rg.propSize( ); i_p++)
-	    if(i_p < (rg.propSize( )-1)) vl = vl.getO().at().propGet(rg.propGet(i_p));
-	    else vl.getO().at().propSet(rg.propGet(i_p),val);
+	for(unsigned i_p = 0; i_p < rg.props().size(); i_p++)
+	    if(i_p < (rg.props().size()-1)) vl = vl.getO().at().propGet(rg.props()[i_p]);
+	    else vl.getO().at().propSet(rg.props()[i_p], val);
     }
 }
 
 void Func::setValS( TValFunc *io, RegW &rg, const string &val )
 {
-    if(rg.propEmpty())
+    if(rg.props().empty())
 	switch(rg.type())
 	{
 	    case Reg::Var:	io->setS(rg.val().io, val);		break;
@@ -1694,7 +1654,7 @@ void Func::setValS( TValFunc *io, RegW &rg, const string &val )
 
 void Func::setValI( TValFunc *io, RegW &rg, int val )
 {
-    if(rg.propEmpty())
+    if(rg.props().empty())
 	switch(rg.type())
 	{
 	    case Reg::Var:	io->setI(rg.val().io, val);		break;
@@ -1706,7 +1666,7 @@ void Func::setValI( TValFunc *io, RegW &rg, int val )
 
 void Func::setValR( TValFunc *io, RegW &rg, double val )
 {
-    if(rg.propEmpty())
+    if(rg.props().empty())
 	switch(rg.type())
 	{
 	    case Reg::Var:	io->setR(rg.val().io, val);		break;
@@ -1718,7 +1678,7 @@ void Func::setValR( TValFunc *io, RegW &rg, double val )
 
 void Func::setValB( TValFunc *io, RegW &rg, char val )
 {
-    if(rg.propEmpty())
+    if(rg.props().empty())
 	switch(rg.type())
 	{
 	    case Reg::Var:	io->setB(rg.val().io, val);		break;
@@ -1730,7 +1690,7 @@ void Func::setValB( TValFunc *io, RegW &rg, char val )
 
 void Func::setValO( TValFunc *io, RegW &rg, AutoHD<TVarObj> val )
 {
-    if(rg.propEmpty())
+    if(rg.props().empty())
 	switch(rg.type())
 	{
 	    case Reg::Var:	io->setO(rg.val().io,val);	break;
@@ -1745,24 +1705,42 @@ void Func::calc( TValFunc *val )
     ResAlloc res(fRes(), false);
     if(!startStat()) return;
 
+    //> Init list of registers
+    RegW reg[mRegs.size()];
+    for(unsigned i_rg = 0; i_rg < mRegs.size(); i_rg++)
+	switch(mRegs[i_rg]->type())
+	{
+	    case Reg::Var:
+		reg[i_rg].setType(Reg::Var);
+		reg[i_rg].val().io = mRegs[i_rg]->val().io;
+		break;
+	    case Reg::PrmAttr:
+		reg[i_rg].setType(Reg::PrmAttr);
+		*reg[i_rg].val().p_attr = *mRegs[i_rg]->val().p_attr;
+		break;
+	    default:	break;
+	}
+
     //> Exec calc
-    ExecData dt = { SYS->sysTm(), 0 };
-    exec(val, (const uint8_t*)prg.c_str(), dt);
-    if(dt.flg&0x08) throw TError(nodePath().c_str(),_("Function execution terminated by error"));
+    ExecData dt = { 1, time(NULL), 0 };
+    try{ exec(val,reg,(const uint8_t*)prg.c_str(),dt); }
+    catch(TError err){ mess_err(err.cat.c_str(),"%s",err.mess.c_str()); }
+    res.release();
 }
 
-void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
+void Func::exec( TValFunc *val, RegW *reg, const uint8_t *cprg, ExecData &dt )
 {
-    RegW *reg = (RegW*)val->exCtx;
-
     while(!(dt.flg&0x01))
     {
 	//> Calc time control mechanism
-	if(SYS->sysTm() > (dt.start_tm+max_calc_tm))
+	if(!((dt.com_cnt++)%10))
 	{
-	    mess_err(nodePath().c_str(),_("Timeouted function calculation %d > %d+%d"),SYS->sysTm(),dt.start_tm,max_calc_tm);
-	    dt.flg |= 0x09;
-	    return;
+	    if(time(NULL) > (dt.start_tm+max_calc_tm))
+	    {
+		mess_err(nodePath().c_str(),_("Timeouted function calculation"));
+		dt.flg |= 0x01;
+		return;
+	    }
 	}
 	//> Calc operation
 	switch(*cprg)
@@ -1774,8 +1752,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t reg; char val; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Load bool %d to reg %d.", ptr->val, ptr->reg);
+#if OSC_DEBUG >= 5
+		printf("CODE: Load bool %d to reg %d.\n",ptr->val,ptr->reg);
 #endif
 		reg[ptr->reg] = ptr->val;
 		cprg += sizeof(SCode); continue;
@@ -1784,8 +1762,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t reg; int val; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Load integer %d to reg %d.", ptr->val, ptr->reg);
+#if OSC_DEBUG >= 5
+		printf("CODE: Load integer %d to reg %d.\n",ptr->val,ptr->reg);
 #endif
 		reg[ptr->reg] = ptr->val;
 		cprg += sizeof(SCode); continue;
@@ -1794,8 +1772,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t reg; double val; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Load real %f to reg %d.", ptr->val, ptr->reg);
+#if OSC_DEBUG >= 5
+		printf("CODE: Load real %f to reg %d.\n",ptr->val,ptr->reg);
 #endif
 		reg[ptr->reg] = ptr->val;
 		cprg += sizeof(SCode); continue;
@@ -1804,8 +1782,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
             {
 		struct SCode { uint8_t cod; uint16_t reg; uint8_t len; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Load string %s(%d) to reg %d.", string((const char*)(cprg+sizeof(SCode)),ptr->len).c_str(), ptr->len, ptr->reg);
+#if OSC_DEBUG >= 5
+		printf("CODE: Load string %s(%d) to reg %d.\n",string((const char*)(cprg+sizeof(SCode)),ptr->len).c_str(),ptr->len,ptr->reg);
 #endif
 		reg[ptr->reg] = string((const char*)(cprg+sizeof(SCode)),ptr->len);
 		cprg += sizeof(SCode)+ptr->len; continue;
@@ -1814,8 +1792,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t reg; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Load object to reg %d.", ptr->reg);
+#if OSC_DEBUG >= 5
+		printf("CODE: Load object to reg %d.\n",ptr->reg);
 #endif
 		reg[ptr->reg] = AutoHD<TVarObj>(new TVarObj());
 		cprg += sizeof(SCode); continue;
@@ -1824,24 +1802,24 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t reg; uint8_t numb; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Load array elements %d to reg %d.", ptr->numb, ptr->reg);
+#if OSC_DEBUG >= 5
+		printf("CODE: Load array elements %d to reg %d.\n",ptr->numb,ptr->reg);
 #endif
 		TArrayObj *ar = new TArrayObj();
 		//>>> Fill array by empty elements number
 		if(ptr->numb == 1)
 		    for(int i_p = 0; i_p < getValI(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode))]); i_p++)
-			ar->propSet(TSYS::int2str(i_p),EVAL_REAL);
+			ar->arSet(i_p, EVAL_REAL);
 		//>>> Fill array by parameters
 		else
 		    for(int i_p = 0; i_p < ptr->numb; i_p++)
 			switch(reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))].vType(this) )
 			{
-			    case Reg::Bool: ar->propSet(TSYS::int2str(i_p),getValB(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))]));	break;
-			    case Reg::Int: ar->propSet(TSYS::int2str(i_p),getValI(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))]));	break;
-			    case Reg::Real: ar->propSet(TSYS::int2str(i_p),getValR(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))]));	break;
-			    case Reg::String: ar->propSet(TSYS::int2str(i_p),getValS(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))]));	break;
-			    case Reg::Obj: ar->propSet(TSYS::int2str(i_p), *reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))].val().o_el);	break;
+			    case Reg::Bool:	ar->arSet(i_p, getValB(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))]));	break;
+			    case Reg::Int:	ar->arSet(i_p, getValI(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))]));	break;
+			    case Reg::Real:	ar->arSet(i_p, getValR(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))]));	break;
+			    case Reg::String:	ar->arSet(i_p, getValS(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))]));	break;
+			    case Reg::Obj:	ar->arSet(i_p, getVal(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))]));	break;
 			    default:	break;
 			}
 		reg[ptr->reg] = AutoHD<TVarObj>(ar);
@@ -1851,8 +1829,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t expr; uint16_t arg; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Load RegExpr to reg %d = (%d,%d).", ptr->rez, ptr->expr, ptr->arg);
+#if OSC_DEBUG >= 5
+		printf("CODE: Load RegExpr to reg %d = (%d,%d).\n",ptr->rez,ptr->expr,ptr->arg);
 #endif
 		reg[ptr->rez] = AutoHD<TVarObj>(new TRegExp(getValS(val,reg[ptr->expr]), getValS(val,reg[ptr->arg])));
 		cprg += sizeof(SCode); continue;
@@ -1861,8 +1839,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t reg; uint8_t len; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Load system object %s(%d) to reg %d.", string((const char*)(cprg+sizeof(SCode)),ptr->len).c_str(), ptr->len, ptr->reg);
+#if OSC_DEBUG >= 5
+		printf("CODE: Load system object %s(%d) to reg %d.\n",string((const char*)(cprg+sizeof(SCode)),ptr->len).c_str(),ptr->len,ptr->reg);
 #endif
 		reg[ptr->reg] = AutoHD<TVarObj>(new TCntrNodeObj(SYS->nodeAt(string((const char*)(cprg+sizeof(SCode)),ptr->len),0,'.'),val->user()));
 		cprg += sizeof(SCode)+ptr->len; continue;
@@ -1871,8 +1849,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t reg; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Load the function arguments object to reg %d.", ptr->reg);
+#if OSC_DEBUG >= 5
+		printf("CODE: Load the function arguments object to reg %d.\n",ptr->reg);
 #endif
 		reg[ptr->reg] = AutoHD<TVarObj>(new TFuncArgsObj(*val));
 		cprg += sizeof(SCode); continue;
@@ -1882,10 +1860,10 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t toR; uint16_t fromR; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Assign from %d to %d.", ptr->fromR, ptr->toR);
+#if OSC_DEBUG >= 5
+		printf("CODE: Assign from %d to %d.\n",ptr->fromR,ptr->toR);
 #endif
-		if(!reg[ptr->toR].propSize())
+		if(!reg[ptr->toR].props().size())
 		    switch(reg[ptr->fromR].vType(this))
 		    {
 			case Reg::Bool:		setValB(val,reg[ptr->toR], getValB(val,reg[ptr->fromR]));	break;
@@ -1902,8 +1880,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t toR; uint16_t fromR; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Move from %d to %d.", ptr->fromR, ptr->toR);
+#if OSC_DEBUG >= 5
+		printf("CODE: Move from %d to %d.\n",ptr->fromR,ptr->toR);
 #endif
 		switch(reg[ptr->fromR].vType(this))
 		{
@@ -1921,20 +1899,20 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t reg; uint8_t len; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Set object's %d properties to string len %d(%s).", ptr->reg, ptr->len, string((const char*)(cprg+sizeof(SCode)),ptr->len).c_str());
+#if OSC_DEBUG >= 5
+		printf("CODE: Set object's %d properties to string len %d(%s)\n",ptr->reg,ptr->len,string((const char*)(cprg+sizeof(SCode)),ptr->len).c_str());
 #endif
-		reg[ptr->reg].propAdd(string((const char*)(cprg+sizeof(SCode)),ptr->len));
+		reg[ptr->reg].props().push_back(string((const char*)(cprg+sizeof(SCode)),ptr->len));
 		cprg += sizeof(SCode) + ptr->len; continue;
 	    }
 	    case Reg::OPrpDin:
 	    {
 		struct SCode { uint8_t cod; uint16_t reg; uint16_t val; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Set object's %d properties to register's %d value.", ptr->reg, ptr->val);
+#if OSC_DEBUG >= 5
+		printf("CODE: Set object's %d properties to register's %d value\n",ptr->reg,ptr->val);
 #endif
-		reg[ptr->reg].propAdd(getValS(val,reg[ptr->val]));
+		reg[ptr->reg].props().push_back(getValS(val,reg[ptr->val]));
 		cprg += sizeof(SCode);  continue;
 	    }
 	    //>> Binary operations
@@ -1942,10 +1920,10 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d + %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d + %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
-		if(!reg[ptr->a1].propSize())
+		if(!reg[ptr->a1].props().size())
 		    switch(reg[ptr->a1].vType(this))
 		    {
 			case Reg::Bool: case Reg::Int: case Reg::Real:
@@ -1976,8 +1954,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d - %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d - %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValR(val,reg[ptr->a1]) - getValR(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -1986,8 +1964,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d * %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d * %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValR(val,reg[ptr->a1]) * getValR(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -1996,8 +1974,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d / %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d / %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValR(val,reg[ptr->a1]) / getValR(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -2006,8 +1984,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d %% %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d %% %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValI(val,reg[ptr->a1]) % getValI(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -2016,8 +1994,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d | %d.\n", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d | %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValI(val,reg[ptr->a1]) | getValI(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -2026,8 +2004,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d & %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d & %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValI(val,reg[ptr->a1]) & getValI(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -2036,8 +2014,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d ^ %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d ^ %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValI(val,reg[ptr->a1]) ^ getValI(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -2046,8 +2024,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d << %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d << %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValI(val,reg[ptr->a1]) << getValI(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -2056,8 +2034,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d >> %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d >> %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValI(val,reg[ptr->a1]) >> getValI(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -2066,8 +2044,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d || %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d || %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = (getValB(val,reg[ptr->a1])==1) || (getValB(val,reg[ptr->a2])==1);
 		cprg += sizeof(SCode); continue;
@@ -2076,12 +2054,12 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; uint16_t end; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d c|| %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d c|| %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		if(getValB(val,reg[ptr->a1]) != true)
 		{
-		    exec(val, cprg+sizeof(SCode), dt);
+		    exec(val,reg,cprg+sizeof(SCode),dt);
 		    reg[ptr->rez] = (getValB(val,reg[ptr->a2])==true);
 		}
 		else reg[ptr->rez] = true;
@@ -2091,8 +2069,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d && %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d && %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = (getValB(val,reg[ptr->a1])==1) && (getValB(val,reg[ptr->a2])==1);
 		cprg += sizeof(SCode); continue;
@@ -2101,12 +2079,12 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; uint16_t end; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d c&& %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d c&& %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		if(getValB(val,reg[ptr->a1]) == true)
 		{
-		    exec(val, cprg+sizeof(SCode), dt);
+		    exec(val,reg,cprg+sizeof(SCode),dt);
 		    reg[ptr->rez] = (getValB(val,reg[ptr->a2])==true);
 		}
 		else reg[ptr->rez] = false;
@@ -2116,8 +2094,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d < %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d < %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValR(val,reg[ptr->a1]) < getValR(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -2126,8 +2104,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d > %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d > %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValR(val,reg[ptr->a1]) > getValR(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -2136,8 +2114,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d <= %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d <= %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValR(val,reg[ptr->a1]) <= getValR(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -2146,8 +2124,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d >= %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d >= %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = getValR(val,reg[ptr->a1]) >= getValR(val,reg[ptr->a2]);
 		cprg += sizeof(SCode); continue;
@@ -2156,10 +2134,10 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d == %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d == %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
-		if(!reg[ptr->a1].propSize())
+		if(!reg[ptr->a1].props().size())
 		    switch(reg[ptr->a1].vType(this))
 		    {
 			case Reg::Bool: case Reg::Int: case Reg::Real:
@@ -2196,10 +2174,10 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = %d != %d.", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = %d != %d.\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
-		if(!reg[ptr->a1].propSize())
+		if(!reg[ptr->a1].props().size())
 		    switch(reg[ptr->a1].vType(this))
 		    {
 			case Reg::Bool: case Reg::Int: case Reg::Real:
@@ -2235,8 +2213,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = !%d.", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = !%d.\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = !getValB(val,reg[ptr->a]);
 		cprg += sizeof(SCode); continue;
@@ -2245,8 +2223,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = ~%d.", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = ~%d.\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = ~getValI(val,reg[ptr->a]);
 		cprg += sizeof(SCode); continue;
@@ -2255,8 +2233,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: %d = -%d.", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: %d = -%d.\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = -getValR(val,reg[ptr->a]);
 		cprg += sizeof(SCode); continue;
@@ -2266,11 +2244,11 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t cond; uint16_t toFalse; uint16_t end; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Condition %d: %d|%d|%d.", ptr->cond, sizeof(SCode), ptr->toFalse, ptr->end);
+#if OSC_DEBUG >= 5
+		printf("CODE: Condition %d: %d|%d|%d.\n",ptr->cond,sizeof(SCode),ptr->toFalse,ptr->end);
 #endif
-		if(getValB(val,reg[ptr->cond]))	exec(val, cprg+sizeof(SCode), dt);
-		else if(ptr->toFalse != ptr->end) exec(val, cprg+ptr->toFalse, dt);
+		if(getValB(val,reg[ptr->cond]))	exec(val,reg,cprg+sizeof(SCode),dt);
+		else if(ptr->toFalse != ptr->end) exec(val,reg,cprg+ptr->toFalse,dt);
 		cprg += ptr->end;
 		continue;
 	    }
@@ -2278,20 +2256,20 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t cond; uint16_t body; uint16_t after; uint16_t end; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Cycle %d: %d|%d|%d|%d.", ptr->cond, sizeof(SCode), ptr->body, ptr->after, ptr->end);
+#if OSC_DEBUG >= 5
+		printf("CODE: Cycle %d: %d|%d|%d|%d.\n",ptr->cond,sizeof(SCode),ptr->body,ptr->after,ptr->end);
 #endif
 		while(!(dt.flg&0x01))
 		{
-		    exec(val, cprg+sizeof(SCode), dt);
+		    exec(val,reg,cprg+sizeof(SCode),dt);
 		    if(!getValB(val,reg[ptr->cond])) break;
 		    dt.flg &= ~0x06;
-		    exec(val, cprg+ptr->body, dt);
+		    exec(val, reg, cprg+ptr->body, dt);
 		    //Check break and continue operators
 		    if(dt.flg&0x02)	{ dt.flg=0; break; }
 		    else if(dt.flg&0x04)dt.flg=0;
 
-		    if(ptr->after) exec(val, cprg+ptr->after, dt);
+		    if(ptr->after) exec(val, reg, cprg+ptr->after, dt);
 		}
 		cprg += ptr->end;
 		continue;
@@ -2300,8 +2278,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t obj; uint16_t body; uint16_t val; uint16_t end; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: CycleObj %d: %d|%d|%d.", ptr->obj, ptr->body, ptr->val, ptr->end);
+#if OSC_DEBUG >= 5
+		printf("CODE: CycleObj %d: %d|%d|%d.\n",ptr->obj,ptr->body,ptr->val,ptr->end);
 #endif
 		TVariant obj = getVal(val,reg[ptr->obj]);
 		if(obj.type() == TVariant::Object)
@@ -2312,7 +2290,7 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 		    {
 			setValS(val,reg[ptr->val],pLs[i_l]);
 			dt.flg &= ~0x06;
-			exec(val, cprg + ptr->body, dt);
+			exec(val, reg, cprg + ptr->body, dt);
 			//Check break and continue operators
 			if(dt.flg&0x02)		{ dt.flg=0; break; }
 			else if(dt.flg&0x04)	dt.flg=0;
@@ -2328,8 +2306,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=sin(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=sin(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = sin(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2338,8 +2316,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=cos(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=cos(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = cos(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2348,8 +2326,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=tan(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=tan(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = tan(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2358,8 +2336,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=sinh(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=sinh(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = sinh(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2368,8 +2346,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=cosh(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=cosh(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = cosh(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2378,8 +2356,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=tanh(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=tanh(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = tanh(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2388,8 +2366,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=asin(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=asin(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = asin(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2398,8 +2376,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=acos(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=acos(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = acos(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2408,8 +2386,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=atan(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=atan(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = atan(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2418,8 +2396,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=rand(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=rand(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = getValR(val,reg[ptr->a])*(double)rand()/(double)RAND_MAX;
 		cprg += sizeof(SCode); continue;
@@ -2428,8 +2406,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=lg(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=lg(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = log10(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2438,8 +2416,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=ln(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=ln(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = log(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2448,8 +2426,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=exp(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=exp(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = exp(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2458,8 +2436,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=pow(%d,%d).", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=pow(%d,%d).\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = pow(getValR(val,reg[ptr->a1]),getValR(val,reg[ptr->a2]));
 		cprg += sizeof(SCode); continue;
@@ -2468,8 +2446,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=min(%d,%d).", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=min(%d,%d).\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = vmin(getValR(val,reg[ptr->a1]),getValR(val,reg[ptr->a2]));
 		cprg += sizeof(SCode); continue;
@@ -2478,8 +2456,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a1; uint16_t a2; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=max(%d,%d).", ptr->rez, ptr->a1, ptr->a2);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=max(%d,%d).\n",ptr->rez,ptr->a1,ptr->a2);
 #endif
 		reg[ptr->rez] = vmax(getValR(val,reg[ptr->a1]),getValR(val,reg[ptr->a2]));
 		cprg += sizeof(SCode); continue;
@@ -2488,8 +2466,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=sqrt(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=sqrt(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = sqrt(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2498,8 +2476,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=abs(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=abs(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = fabs(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2508,8 +2486,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=sign(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=sign(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = (getValR(val,reg[ptr->a])>=0)?1:-1;
 		cprg += sizeof(SCode); continue;
@@ -2518,8 +2496,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=ceil(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=ceil(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = ceil(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2528,8 +2506,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=floor(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=floor(%d).\n",ptr->rez,ptr->a);
 #endif
 		reg[ptr->rez] = floor(getValR(val,reg[ptr->a]));
 		cprg += sizeof(SCode); continue;
@@ -2538,8 +2516,8 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t rez; uint16_t a; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Function %d=typeof(%d).", ptr->rez, ptr->a);
+#if OSC_DEBUG >= 5
+		printf("CODE: Function %d=typeof(%d).\n",ptr->rez,ptr->a);
 #endif
 		string rez = "undefined";
 		TVariant vl = getVal(val, reg[ptr->a]);
@@ -2567,19 +2545,19 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 		    vfnc = new TValFunc("JavaLikeFuncCalc",&funcAt(ptr->f)->func().at());
 		    val->ctxSet(ptr->f,vfnc);
 		}
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Call function/procedure %d = %s(%d).", ptr->rez, vfnc->func()->id().c_str(), ptr->n);
+#if OSC_DEBUG >= 5
+		printf("CODE: Call function/procedure %d = %s(%d).\n",ptr->rez,vfnc->func()->id().c_str(),ptr->n);
 #endif
-		//>>> Get return position
+		//  Get return position
 		int r_pos, i_p, p_p;
 		for(r_pos = 0; r_pos < vfnc->func()->ioSize(); r_pos++)
 		    if(vfnc->ioFlg(r_pos)&IO::Return) break;
-		//>>> Process parameters
+		//  Process parameters
 		for(i_p = p_p = 0; true; i_p++)
 		{
 		    p_p = (i_p>=r_pos)?i_p+1:i_p;
 		    if(p_p >= vfnc->func()->ioSize()) break;
-		    //>>>> Set default value
+		    //   Set default value
 		    if(i_p >= ptr->n)	{ vfnc->setS(p_p,vfnc->func()->io(p_p)->def()); continue; }
 		    switch(vfnc->ioType(p_p))
 		    {
@@ -2590,9 +2568,9 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 			case IO::Object:	vfnc->setO(p_p,getValO(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))])); break;
 		    }
 		}
-		//>>> Make calc
+		//  Make calc
 		vfnc->calc(vfnc->user());
-		//>>> Process outputs
+		//  Process outputs
 		for(i_p = 0; i_p < ptr->n; i_p++)
 		{
 		    p_p = (i_p>=r_pos)?i_p+1:i_p;
@@ -2607,7 +2585,7 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 			    case IO::Object:	setValO(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))],vfnc->getO(p_p)); break;
 			}
 		}
-		//>>> Set return
+		//  Set return
 		if(ptr->cod == Reg::CFunc)
 		    switch(vfnc->ioType(r_pos))
 		    {
@@ -2624,10 +2602,11 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 	    {
 		struct SCode { uint8_t cod; uint16_t obj; uint8_t n; uint16_t rez; } __attribute__((packed));
 		const struct SCode *ptr = (const struct SCode *)cprg;
-#ifdef OSC_DEBUG
-		mess_debug(nodePath().c_str(), "CODE: Call object's function %d = %d(%d).", ptr->rez, ptr->obj, ptr->n);
+
+#if OSC_DEBUG >= 5
+		printf("CODE: Call object's function %d = %d(%d).\n",ptr->rez,ptr->obj,ptr->n);
 #endif
-		if(reg[ptr->obj].propEmpty())
+		if(reg[ptr->obj].props().empty())
 		    throw TError(nodePath().c_str(),_("Call object's function for no object or function name is empty."));
 
 		TVariant obj = getVal(val,reg[ptr->obj],true);
@@ -2638,7 +2617,7 @@ void Func::exec( TValFunc *val, const uint8_t *cprg, ExecData &dt )
 		    prms.push_back(getVal(val,reg[TSYS::getUnalign16(cprg+sizeof(SCode)+i_p*sizeof(uint16_t))]));
 
 		//> Call
-		TVariant rez = oFuncCall(obj, reg[ptr->obj].propGet(reg[ptr->obj].propSize()-1), prms);
+		TVariant rez = oFuncCall(obj, reg[ptr->obj].props().back(), prms);
 		//if(obj.isModify()) setVal(val,reg[ptr->obj],obj,true);
 		//> Process outputs
 		for(unsigned i_p = 0; i_p < prms.size(); i_p++)
@@ -2679,9 +2658,7 @@ void Func::cntrCmdProc( XMLNode *opt )
     {
 	TFunction::cntrCmdProc(opt);
 	ctrMkNode("oscada_cntr",opt,-1,"/",_("Function: ")+name(),/*owner().DB().empty()?R_R_R_:*/RWRWR_,"root",SDAQ_ID);
-	if(owner().DB().size())
-	    ctrMkNode("fld",opt,-1,"/func/st/timestamp",_("Date of modification"),R_R_R_,"root",SDAQ_ID,1,"tp","time");
-	ctrMkNode("fld",opt,-1,"/func/cfg/name",_("Name"),owner().DB().empty()?R_R_R_:RWRWR_,"root",SDAQ_ID,2,"tp","str","len","50");
+	ctrMkNode("fld",opt,-1,"/func/cfg/name",_("Name"),owner().DB().empty()?R_R_R_:RWRWR_,"root",SDAQ_ID,2,"tp","str","len",OBJ_NM_SZ);
 	ctrMkNode("fld",opt,-1,"/func/cfg/descr",_("Description"),owner().DB().empty()?R_R_R_:RWRWR_,"root",SDAQ_ID,3,"tp","str","cols","100","rows","5");
 	ctrMkNode("fld",opt,-1,"/func/cfg/m_calc_tm",_("Maximum calculate time (sec)"),RWRWR_,"root",SDAQ_ID,3,"tp","dec","min","0","max","3600");
 	if(ctrMkNode("area",opt,-1,"/io",_("Program")))
@@ -2706,12 +2683,11 @@ void Func::cntrCmdProc( XMLNode *opt )
 
     //> Process command to page
     string a_path = opt->attr("path");
-    if(a_path == "/func/st/timestamp" && ctrChkNode(opt))	opt->setText(TSYS::int2str(timeStamp()));
-    else if(a_path == "/func/cfg/name" && ctrChkNode(opt,"set",RWRWR_,"root",SDAQ_ID,SEC_WR))	setName(opt->text());
+    if(a_path == "/func/cfg/name" && ctrChkNode(opt,"set",RWRWR_,"root",SDAQ_ID,SEC_WR))	setName(opt->text());
     else if(a_path == "/func/cfg/descr" && ctrChkNode(opt,"set",RWRWR_,"root",SDAQ_ID,SEC_WR))	setDescr(opt->text());
     else if(a_path == "/func/cfg/m_calc_tm")
     {
-	if(ctrChkNode(opt,"get",RWRWR_,"root",SDAQ_ID,SEC_RD))	opt->setText(TSYS::int2str(maxCalcTm()));
+	if(ctrChkNode(opt,"get",RWRWR_,"root",SDAQ_ID,SEC_RD))	opt->setText(i2s(maxCalcTm()));
 	if(ctrChkNode(opt,"set",RWRWR_,"root",SDAQ_ID,SEC_WR))	setMaxCalcTm(atoi(opt->text().c_str()));
     }
     else if(a_path == "/io/io")
@@ -2728,8 +2704,8 @@ void Func::cntrCmdProc( XMLNode *opt )
 	    {
 		if(n_id)	n_id->childAdd("el")->setText(io(id)->id());
 		if(n_nm)	n_nm->childAdd("el")->setText(io(id)->name());
-		if(n_type)	n_type->childAdd("el")->setText(TSYS::int2str(io(id)->type()|((io(id)->flg()&IO::FullText)<<8)));
-		if(n_mode)	n_mode->childAdd("el")->setText(TSYS::int2str(io(id)->flg()&(IO::Output|IO::Return)));
+		if(n_type)	n_type->childAdd("el")->setText(i2s(io(id)->type()|((io(id)->flg()&IO::FullText)<<8)));
+		if(n_mode)	n_mode->childAdd("el")->setText(i2s(io(id)->flg()&(IO::Output|IO::Return)));
 		if(n_hide)	n_hide->childAdd("el")->setText(io(id)->hide()?"1":"0");
 		if(n_def)	n_def->childAdd("el")->setText(io(id)->def());
 	    }
@@ -2921,15 +2897,4 @@ Reg::Type RegW::vType( Func *fnc )
 	default: break;
     }
     return type();
-}
-
-string RegW::propGet( int id )
-{
-    if(id < 0 || id >= (int)mPrps.size()) return "";
-    return mPrps[id];
-}
-
-void RegW::propAdd( const string &vl )
-{
-    mPrps.push_back(vl);
 }

@@ -141,8 +141,8 @@ class Node : public TFunction, public TConfig
 	class SIO
 	{
 	    public:
-		SIO( ) : id(-1), sTp(0), pos(-1)	{ }
-		SIO( int iid, char isTp = 0, int ipos = 0 ) : id(iid), sTp(isTp), pos(ipos)	{ }
+		SIO( ) : id(-1), pos(-1), sTp(0)	{ }
+		SIO( int iid, char isTp = 0, int ipos = 0 ) : id(iid), pos(ipos), sTp(isTp)	{ }
 
 		int id, pos;
 		char sTp;
@@ -154,7 +154,7 @@ class Node : public TFunction, public TConfig
 
 		TValFunc	val;
 		map<int,AutoHD<TVal> > lnk;
-		map<int,SIO> reg, coil;
+		map<int,SIO> regR, regW, coilR, coilW;
 		float rReg, wReg, rCoil, wCoil;
 	};
 
@@ -166,7 +166,7 @@ class Node : public TFunction, public TConfig
 	void postEnable( int flag );
 	void postDisable( int flag );		//Delete all DB if flag 1
 	bool cfgChange( TCfg &cfg );
-	void regCR( int id, const SIO &val, char tp = 'R' );
+	void regCR( int id, const SIO &val, char tp, bool wr = false );
 
 	static void *Task( void *icntr );
 
@@ -206,7 +206,7 @@ class TProt: public TProtocol
 	void outMess( XMLNode &io, TTransportOut &tro );
 
 	//> Special modbus protocol's functions
-	uint16_t CRC16( const string &mbap );
+	uint16_t	CRC16( const string &mbap );
 	uint8_t	LRC( const string &mbap );
 	string	DataToASCII( const string &in );
 	string	ASCIIToData( const string &in );

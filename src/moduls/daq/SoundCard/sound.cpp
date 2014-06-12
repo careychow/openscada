@@ -95,7 +95,7 @@ void TTpContr::postEnable( int flag )
     fldAdd(new TFld("PRM_BD",_("Parameters' table"),TFld::String,0,"30"));
     fldAdd(new TFld("CARD",_("Card device"),TFld::String,0,"100","<default>"));
     fldAdd(new TFld("SMPL_RATE",_("Card sample rate (Hz)"),TFld::Integer,0,"5","8000","1;200000"));
-    fldAdd(new TFld("SMPL_TYPE",_("Card sample type"),TFld::Integer,TFld::Selected,"5",TSYS::int2str(paFloat32).c_str(),
+    fldAdd(new TFld("SMPL_TYPE",_("Card sample type"),TFld::Integer,TFld::Selected,"5",i2s(paFloat32).c_str(),
 	TSYS::strMess("%d;%d;%d",paFloat32,paInt32,paInt16).c_str(),_("Float 32;Int 32;Int 16")));
     fldAdd(new TFld("PRIOR",_("Gather task priority"),TFld::Integer,TFld::NoFlag,"2","0","-1;99"));
 
@@ -120,7 +120,7 @@ TMdContr::TMdContr( string name_c, const string &daq_db, ::TElem *cfgelem) :
     cfg("PRM_BD").setS("SoundCard_"+name_c);
 
     pEl.fldAdd(new TFld("val",_("Value"),((mSmplType==paFloat32)?TFld::Real:TFld::Integer),TFld::NoWrite,"",
-					  ((mSmplType==paFloat32)?TSYS::real2str(EVAL_REAL).c_str():TSYS::int2str(EVAL_INT).c_str())));
+					 ((mSmplType==paFloat32)?r2s(EVAL_REAL).c_str():ll2s(EVAL_INT).c_str())));
 }
 
 TMdContr::~TMdContr()
@@ -177,7 +177,7 @@ string TMdContr::sampleRates( )
 
     for(int i_s = 0; standardSampleRates[i_s]; i_s++)
 	if(startStat() || Pa_IsFormatSupported(&iParam, NULL, standardSampleRates[i_s]) == paFormatIsSupported)
-	    rez += TSYS::int2str(standardSampleRates[i_s])+";";
+	    rez += i2s(standardSampleRates[i_s])+";";
 
     return rez;
 }
@@ -321,8 +321,6 @@ int TMdContr::recordCallback( const void *iBuf, void *oBuf, unsigned long frames
     {
 	int64_t dTm = TSYS::curTime()-cntr.wTm;
 	if(cntr.inAdcTimeAdj > 0) cntr.sRt -= (dTm-cntr.tmAdj)*cntr.sRt/60000000;
-	if(cntr.messLev() == TMess::Debug)
-	    mess_debug_(cntr.nodePath().c_str(), _("CallBack: Sound counter difference fix: sRt=%d; dTm=%lld."), cntr.sRt, dTm);
 	cntr.tmAdj = dTm;
 	cntr.inAdcTimeAdj = timeInfo->inputBufferAdcTime;
     }
@@ -332,7 +330,6 @@ int TMdContr::recordCallback( const void *iBuf, void *oBuf, unsigned long frames
     ResAlloc res(cntr.nodeRes(),false);
     for(unsigned i_p = 0; i_p < cntr.pHd.size(); i_p++)
     {
-	const char *rptr = (const char*)iBuf;
 	int  chn = cntr.pHd[i_p].at().iCnl();
 	AutoHD<TVal> val = cntr.pHd[i_p].at().vlAt("val");
 	AutoHD<TVArchive> arch = val.at().arch();
@@ -343,30 +340,30 @@ int TMdContr::recordCallback( const void *iBuf, void *oBuf, unsigned long frames
 		if(archAllow)
 		    for(int64_t i_t = 0; i_t < t_sz; i_t += arch.at().period())
 			arch.at().setR(*(float*)(bptr+cntr.smplSize*((i_t*framesPerBuffer/t_sz)*cntr.numChan+chn)), cntr.wTm+i_t);
-		if(SYS->sysTm() > cntr.cTm)
+		if(time(NULL) > cntr.cTm)
 		{
 		    val.at().setR(*(float*)(bptr+cntr.smplSize*((framesPerBuffer-1)*cntr.numChan+chn)),cntr.wTm+(1000000ll*(framesPerBuffer-1))/cntr.sRt,true);
-		    cntr.cTm = SYS->sysTm();
+		    cntr.cTm = time(NULL);
 		}
 		break;
 	    case paInt32:
 		if(archAllow)
 		    for(int64_t i_t = 0; i_t < t_sz; i_t += arch.at().period())
 			arch.at().setI(*(int32_t*)(bptr+cntr.smplSize*((i_t*framesPerBuffer/t_sz)*cntr.numChan+chn)), cntr.wTm+i_t);
-		if(SYS->sysTm() > cntr.cTm)
+		if(time(NULL) > cntr.cTm)
 		{
 		    val.at().setI(*(int32_t*)(bptr+cntr.smplSize*((framesPerBuffer-1)*cntr.numChan+chn)),cntr.wTm+(1000000ll*(framesPerBuffer-1))/cntr.sRt,true);
-		    cntr.cTm = SYS->sysTm();
+		    cntr.cTm = time(NULL);
 		}
 		break;
 	    case paInt16:
 		if(archAllow)
 		    for(int64_t i_t = 0; i_t < t_sz; i_t += arch.at().period())
 			arch.at().setI(*(int16_t*)(bptr+cntr.smplSize*((i_t*framesPerBuffer/t_sz)*cntr.numChan+chn)), cntr.wTm+i_t);
-		if(SYS->sysTm() > cntr.cTm)
+		if(time(NULL) > cntr.cTm)
 		{
 		    val.at().setI(*(int16_t*)(bptr+cntr.smplSize*((framesPerBuffer-1)*cntr.numChan+chn)),cntr.wTm+(1000000ll*(framesPerBuffer-1))/cntr.sRt,true);
-		    cntr.cTm = SYS->sysTm();
+		    cntr.cTm = time(NULL);
 		}
 		break;
 	}
@@ -472,7 +469,6 @@ void TMdPrm::vlArchMake( TVal &val )
     val.arch().at().setPeriod(1000000/owner().mSmplRate);
     val.arch().at().setHardGrid(true);
     val.arch().at().setHighResTm(true);
-    val.arch().at().setCombMode(TVArchive::LastVal);
 }
 
 void TMdPrm::cntrCmdProc( XMLNode *opt )
@@ -489,6 +485,6 @@ void TMdPrm::cntrCmdProc( XMLNode *opt )
     string a_path = opt->attr("path");
     if(a_path == "/prm/cfg/lst_CHANNEL" && ctrChkNode(opt))
 	for(int i_c = 0; i_c < owner().channelAllow(); i_c++)
-	    opt->childAdd("el")->setText(TSYS::int2str(i_c));
+	    opt->childAdd("el")->setText(i2s(i_c));
     else TParamContr::cntrCmdProc(opt);
 }

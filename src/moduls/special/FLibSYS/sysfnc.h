@@ -43,8 +43,8 @@ class sysCall : public TFunction
     public:
 	sysCall( ) : TFunction("sysCall",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::String,IO::Return|IO::FullText) );
-	    ioAdd( new IO("com",_("Command"),IO::String,IO::Default) );
+	    ioAdd(new IO("rez",_("Result"),IO::String,IO::Return|IO::FullText));
+	    ioAdd(new IO("com",_("Command"),IO::String,IO::Default));
 	}
 
 	string name( )	{ return _("Sys: Call"); }
@@ -52,16 +52,16 @@ class sysCall : public TFunction
 
 	void calc( TValFunc *val )
 	{
-	    FILE *fp = popen(val->getS(1).c_str(),"r");
-	    if( !fp ) return;
+	    FILE *fp = popen(val->getS(1).c_str(), "r");
+	    if(!fp) return;
 
 	    char buf[STR_BUF_LEN];
 	    string rez;
-	    for( int r_cnt = 0; (r_cnt=fread(buf,1,sizeof(buf),fp)); )
+	    for(int r_cnt = 0; (r_cnt=fread(buf,1,sizeof(buf),fp)); )
 		rez.append(buf,r_cnt);
 
 	    pclose(fp);
-	    val->setS(0,rez);
+	    val->setS(0, rez);
 	}
 };
 
@@ -73,10 +73,10 @@ class dbReqSQL : public TFunction
     public:
 	dbReqSQL( ) : TFunction("dbReqSQL",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::Object,IO::Return) );
-	    ioAdd( new IO("addr",_("DB address"),IO::String,IO::Default) );
-	    ioAdd( new IO("req",_("SQL request"),IO::String,IO::Default) );
-	    ioAdd( new IO("trans",_("Transaction"),IO::Boolean,IO::Default,TSYS::int2str(EVAL_BOOL).c_str()) );
+	    ioAdd(new IO("rez",_("Result"),IO::Object,IO::Return));
+	    ioAdd(new IO("addr",_("DB address"),IO::String,IO::Default));
+	    ioAdd(new IO("req",_("SQL request"),IO::String,IO::Default));
+	    ioAdd(new IO("trans",_("Transaction"),IO::Boolean,IO::Default,i2s(EVAL_BOOL).c_str()));
 	}
 
 	string name( )	{ return _("DB: SQL request"); }
@@ -94,12 +94,13 @@ class dbReqSQL : public TFunction
 		for(unsigned i_r = 0; i_r < rtbl.size(); i_r++)
 		{
 		    TArrayObj *row = new TArrayObj();
-		    for(unsigned i_c = 0; i_c < rtbl[i_r].size(); i_c++)
-			row->propSet(TSYS::int2str(i_c),rtbl[i_r][i_c]);
-		    rez->propSet(TSYS::int2str(i_r),AutoHD<TVarObj>(row));
+		    for(unsigned i_c = 0; i_c < rtbl[i_r].size(); i_c++) row->arSet(i_c, rtbl[i_r][i_c]);
+		    rez->arSet(i_r, AutoHD<TVarObj>(row));
 		}
-	    }catch(...){ }
-	    val->setO(0,rez);
+	    }
+	    catch(...){ }
+
+	    val->setO(0, rez);
 	}
 };
 
@@ -112,14 +113,14 @@ class dbReqSQL : public TFunction
 class messGet : public TFunction
 {
     public:
-	messGet( ) : TFunction("messGet",SSPC_ID)
+	messGet( ) : TFunction("messGet", SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::Object,IO::Return) );
-	    ioAdd( new IO("btm",_("Begin time"),IO::Integer,IO::Default) );
-	    ioAdd( new IO("etm",_("End time"),IO::Integer,IO::Default) );
-	    ioAdd( new IO("cat",_("Category"),IO::String,IO::Default) );
-	    ioAdd( new IO("lev",_("Level"),IO::Integer,IO::Default) );
-	    ioAdd( new IO("arch",_("Archivator"),IO::String,IO::Default) );
+	    ioAdd(new IO("rez",_("Result"),IO::Object,IO::Return));
+	    ioAdd(new IO("btm",_("Begin time"),IO::Integer,IO::Default));
+	    ioAdd(new IO("etm",_("End time"),IO::Integer,IO::Default));
+	    ioAdd(new IO("cat",_("Category"),IO::String,IO::Default));
+	    ioAdd(new IO("lev",_("Level"),IO::Integer,IO::Default));
+	    ioAdd(new IO("arch",_("Archivator"),IO::String,IO::Default));
 	}
 
 	string name( )	{ return _("Mess: Get"); }
@@ -128,17 +129,17 @@ class messGet : public TFunction
 	void calc( TValFunc *val )
 	{
 	    vector<TMess::SRec> recs;
-	    SYS->archive().at().messGet( val->getI(1), val->getI(2), recs, val->getS(3), val->getI(4), val->getS(5) );
+	    SYS->archive().at().messGet(val->getI(1), val->getI(2), recs, val->getS(3), val->getI(4), val->getS(5));
 	    TArrayObj *rez = new TArrayObj();
 	    for(unsigned i_m = 0; i_m < recs.size(); i_m++)
 	    {
 		TVarObj *am = new TVarObj();
-		am->propSet("tm",(int)recs[i_m].time);
-		am->propSet("utm",recs[i_m].utime);
-		am->propSet("categ",recs[i_m].categ);
-		am->propSet("level",recs[i_m].level);
-		am->propSet("mess",recs[i_m].mess);
-		rez->propSet(TSYS::int2str(i_m),AutoHD<TVarObj>(am));
+		am->propSet("tm", (int)recs[i_m].time);
+		am->propSet("utm", recs[i_m].utime);
+		am->propSet("categ", recs[i_m].categ);
+		am->propSet("level", recs[i_m].level);
+		am->propSet("mess", recs[i_m].mess);
+		rez->arSet(i_m, AutoHD<TVarObj>(am));
 	    }
 	    val->setO(0,rez);
 	}
@@ -150,11 +151,11 @@ class messGet : public TFunction
 class messPut : public TFunction
 {
     public:
-	messPut( ) : TFunction("messPut",SSPC_ID)
+	messPut( ) : TFunction("messPut", SSPC_ID)
 	{
-	    ioAdd( new IO("cat",_("Category"),IO::String,IO::Default) );
-	    ioAdd( new IO("lev",_("Level"),IO::Integer,IO::Default) );
-	    ioAdd( new IO("mess",_("Message"),IO::String,IO::Default) );
+	    ioAdd(new IO("cat",_("Category"),IO::String,IO::Default));
+	    ioAdd(new IO("lev",_("Level"),IO::Integer,IO::Default));
+	    ioAdd(new IO("mess",_("Message"),IO::String,IO::Default));
 	}
 
 	string name( )	{ return _("Mess: Put"); }
@@ -162,7 +163,7 @@ class messPut : public TFunction
 
 	void calc( TValFunc *val )
 	{
-	    message(val->getS(0).c_str(),(TMess::Type)val->getI(1),"%s",val->getS(2).c_str());
+	    message(val->getS(0).c_str(), (TMess::Type)val->getI(1), "%s", val->getS(2).c_str());
 	}
 };
 
@@ -177,8 +178,8 @@ class strSize : public TFunction
     public:
 	strSize( ) : TFunction("strSize",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::Integer,IO::Return) );
-	    ioAdd( new IO("str",_("String"),IO::String,IO::Default) );
+	    ioAdd(new IO("rez",_("Result"),IO::Integer,IO::Return));
+	    ioAdd(new IO("str",_("String"),IO::String,IO::Default));
 	}
 
 	string name( )	{ return _("String: Get size"); }
@@ -186,7 +187,7 @@ class strSize : public TFunction
 
 	void calc( TValFunc *val )
 	{
-	    val->setI(0,val->getS(1).size());
+	    val->setI(0, val->getS(1).size());
 	}
 };
 
@@ -227,9 +228,9 @@ class strInsert : public TFunction
     public:
 	strInsert( ) : TFunction("strInsert",SSPC_ID)
 	{
-	    ioAdd( new IO("str",_("String"),IO::String,IO::Output) );
-	    ioAdd( new IO("pos",_("Position"),IO::Integer,IO::Default,"0") );
-	    ioAdd( new IO("ins",_("Insert string"),IO::String,IO::Default) );
+	    ioAdd(new IO("str",_("String"),IO::String,IO::Output));
+	    ioAdd(new IO("pos",_("Position"),IO::Integer,IO::Default,"0"));
+	    ioAdd(new IO("ins",_("Insert string"),IO::String,IO::Default));
 	}
 
 	string name( )	{ return _("String: Insert string to other string"); }
@@ -252,10 +253,10 @@ class strReplace : public TFunction
     public:
 	strReplace( ) : TFunction("strReplace",SSPC_ID)
 	{
-	    ioAdd( new IO("str",_("String"),IO::String,IO::Output) );
-	    ioAdd( new IO("pos",_("Position"),IO::Integer,IO::Default,"0") );
-	    ioAdd( new IO("n"  ,_("Number"),IO::Integer,IO::Default,"-1") );
-	    ioAdd( new IO("repl",_("Replace string"),IO::String,IO::Default) );
+	    ioAdd(new IO("str",_("String"),IO::String,IO::Output));
+	    ioAdd(new IO("pos",_("Position"),IO::Integer,IO::Default,"0"));
+	    ioAdd(new IO("n"  ,_("Number"),IO::Integer,IO::Default,"-1"));
+	    ioAdd(new IO("repl",_("Replace string"),IO::String,IO::Default));
 	}
 
 	string name( )	{ return _("String: Replace part string on other string"); }
@@ -281,11 +282,11 @@ class strParse : public TFunction
     public:
 	strParse( ) : TFunction("strParse",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::String,IO::Return) );
-	    ioAdd( new IO("str",_("String"),IO::String,IO::Default) );
-	    ioAdd( new IO("lev",_("Level"),IO::Integer,IO::Default) );
-	    ioAdd( new IO("sep",_("Separator"),IO::String,IO::Default,".") );
-	    ioAdd( new IO("off",_("Offset"),IO::Integer,IO::Output) );
+	    ioAdd(new IO("rez",_("Result"),IO::String,IO::Return));
+	    ioAdd(new IO("str",_("String"),IO::String,IO::Default));
+	    ioAdd(new IO("lev",_("Level"),IO::Integer,IO::Default));
+	    ioAdd(new IO("sep",_("Separator"),IO::String,IO::Default,"."));
+	    ioAdd(new IO("off",_("Offset"),IO::Integer,IO::Output));
 	}
 
 	string name( )	{ return _("String: Parse on separator"); }
@@ -308,10 +309,10 @@ class strParsePath : public TFunction
     public:
 	strParsePath( ) : TFunction("strParsePath",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::String,IO::Return) );
-	    ioAdd( new IO("path",_("Path"),IO::String,IO::Default) );
-	    ioAdd( new IO("lev",_("Level"),IO::Integer,IO::Default) );
-	    ioAdd( new IO("off",_("Offset"),IO::Integer,IO::Output) );
+	    ioAdd(new IO("rez",_("Result"),IO::String,IO::Return));
+	    ioAdd(new IO("path",_("Path"),IO::String,IO::Default));
+	    ioAdd(new IO("lev",_("Level"),IO::Integer,IO::Default));
+	    ioAdd(new IO("off",_("Offset"),IO::Integer,IO::Output));
 	}
 
 	string name( )	{ return _("String: Path parse"); }
@@ -333,9 +334,9 @@ class strPath2Sep : public TFunction
     public:
 	strPath2Sep( ) : TFunction("strPath2Sep",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::String,IO::Return) );
-	    ioAdd( new IO("src",_("Source"),IO::String,IO::Default) );
-	    ioAdd( new IO("sep",_("Separator"),IO::String,IO::Default,".") );
+	    ioAdd(new IO("rez",_("Result"),IO::String,IO::Return));
+	    ioAdd(new IO("src",_("Source"),IO::String,IO::Default));
+	    ioAdd(new IO("sep",_("Separator"),IO::String,IO::Default,"."));
 	}
 
 	string name( )	{ return _("String: Path to separated string"); }
@@ -355,8 +356,8 @@ class strEnc2HTML : public TFunction
     public:
 	strEnc2HTML( ) : TFunction("strEnc2HTML",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::String,IO::Return) );
-	    ioAdd( new IO("src",_("Source"),IO::String,IO::Default) );
+	    ioAdd(new IO("rez",_("Result"),IO::String,IO::Return));
+	    ioAdd(new IO("src",_("Source"),IO::String,IO::Default));
 	}
 
 	string name( )	{ return _("String: Encode string to HTML"); }
@@ -376,8 +377,8 @@ class strEnc2Bin : public TFunction
     public:
 	strEnc2Bin( ) : TFunction("strEnc2Bin",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::String,IO::Return) );
-	    ioAdd( new IO("src",_("Source"),IO::String,IO::Default) );
+	    ioAdd(new IO("rez",_("Result"),IO::String,IO::Return));
+	    ioAdd(new IO("src",_("Source"),IO::String,IO::Default));
 	}
 
 	string name( )	{ return _("String: Encode text to bin"); }
@@ -397,8 +398,8 @@ class strDec4Bin : public TFunction
     public:
 	strDec4Bin( ) : TFunction("strDec4Bin",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::String,IO::Return) );
-	    ioAdd( new IO("src",_("Source"),IO::String,IO::Default) );
+	    ioAdd(new IO("rez",_("Result"),IO::String,IO::Return));
+	    ioAdd(new IO("src",_("Source"),IO::String,IO::Default));
 	}
 
 	string name( )	{ return _("String: Decode text from bin"); }
@@ -418,10 +419,10 @@ class real2str : public TFunction
     public:
 	real2str( ) : TFunction("real2str",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::String,IO::Return) );
-	    ioAdd( new IO("val",_("Value"),IO::Real,IO::Default) );
-	    ioAdd( new IO("prc",_("Precision"),IO::Integer,IO::Default,"4") );
-	    ioAdd( new IO("tp",_("Type"),IO::String,IO::Default,"f") );
+	    ioAdd(new IO("rez",_("Result"),IO::String,IO::Return));
+	    ioAdd(new IO("val",_("Value"),IO::Real,IO::Default));
+	    ioAdd(new IO("prc",_("Precision"),IO::Integer,IO::Default,"4"));
+	    ioAdd(new IO("tp",_("Type"),IO::String,IO::Default,"f"));
 	}
 
 	string name( )	{ return _("String: Real to string"); }
@@ -429,7 +430,7 @@ class real2str : public TFunction
 
 	void calc( TValFunc *val )
 	{
-	    val->setS(0,TSYS::real2str(val->getR(1),val->getI(2),val->getS(3).size()?val->getS(3)[0]:'f') );
+	    val->setS(0, r2s(val->getR(1),val->getI(2),val->getS(3).size()?val->getS(3)[0]:'f'));
 	}
 };
 
@@ -441,9 +442,9 @@ class int2str : public TFunction
     public:
 	int2str( ) : TFunction("int2str",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::String,IO::Return) );
-	    ioAdd( new IO("val",_("Value"),IO::Integer,IO::Default) );
-	    ioAdd( new IO("base",_("Base"),IO::Integer,IO::Default,"10") );
+	    ioAdd(new IO("rez",_("Result"),IO::String,IO::Return));
+	    ioAdd(new IO("val",_("Value"),IO::Integer,IO::Default));
+	    ioAdd(new IO("base",_("Base"),IO::Integer,IO::Default,"10"));
 	}
 
 	string name( )	{ return _("String: Integer to string"); }
@@ -453,9 +454,9 @@ class int2str : public TFunction
 	{
 	    switch( val->getI(2) )
 	    {
-		case 8:	val->setS(0,TSYS::int2str(val->getI(1),TSYS::Oct));	break;
-		case 10:val->setS(0,TSYS::int2str(val->getI(1),TSYS::Dec));	break;
-		case 16:val->setS(0,TSYS::int2str(val->getI(1),TSYS::Hex));	break;
+		case 8:	val->setS(0, i2s(val->getI(1),TSYS::Oct));	break;
+		case 10:val->setS(0, i2s(val->getI(1),TSYS::Dec));	break;
+		case 16:val->setS(0, i2s(val->getI(1),TSYS::Hex));	break;
 		default: val->setS(0,"");
 	    }
 	}
@@ -469,8 +470,8 @@ class str2real : public TFunction
     public:
 	str2real( ) : TFunction("str2real",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::Real,IO::Return) );
-	    ioAdd( new IO("val",_("Value"),IO::String,IO::Default) );
+	    ioAdd(new IO("rez",_("Result"),IO::Real,IO::Return));
+	    ioAdd(new IO("val",_("Value"),IO::String,IO::Default));
 	}
 
 	string name( )	{ return _("String: String to real"); }
@@ -487,9 +488,9 @@ class str2int : public TFunction
     public:
 	str2int( ) : TFunction("str2int",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::Integer,IO::Return) );
-	    ioAdd( new IO("val",_("Value"),IO::String,IO::Default) );
-	    ioAdd( new IO("base",_("Base"),IO::Integer,IO::Default,"0") );
+	    ioAdd(new IO("rez",_("Result"),IO::Integer,IO::Return));
+	    ioAdd(new IO("val",_("Value"),IO::String,IO::Default));
+	    ioAdd(new IO("base",_("Base"),IO::Integer,IO::Default,"0"));
 	}
 
 	string name( )	{ return _("String: String to integer"); }
@@ -506,9 +507,9 @@ class floatSplitWord : public TFunction
     public:
 	floatSplitWord( ) : TFunction("floatSplitWord",SSPC_ID)
 	{
-	    ioAdd( new IO("val",_("Value"),IO::Real,IO::Default) );
-	    ioAdd( new IO("w1",_("Word 1"),IO::Integer,IO::Output) );
-	    ioAdd( new IO("w2",_("Word 2"),IO::Integer,IO::Output) );
+	    ioAdd(new IO("val",_("Value"),IO::Real,IO::Default));
+	    ioAdd(new IO("w1",_("Word 1"),IO::Integer,IO::Output));
+	    ioAdd(new IO("w2",_("Word 2"),IO::Integer,IO::Output));
 	}
 
 	string name( )	{ return _("Float: Split to words"); }
@@ -531,9 +532,9 @@ class floatMergeWord : public TFunction
     public:
 	floatMergeWord( ) : TFunction("floatMergeWord",SSPC_ID)
 	{
-	    ioAdd( new IO("rez",_("Result"),IO::Real,IO::Return) );
-	    ioAdd( new IO("w1",_("Word 1"),IO::Integer,IO::Default) );
-	    ioAdd( new IO("w2",_("Word 2"),IO::Integer,IO::Default) );
+	    ioAdd(new IO("rez",_("Result"),IO::Real,IO::Return));
+	    ioAdd(new IO("w1",_("Word 1"),IO::Integer,IO::Default));
+	    ioAdd(new IO("w2",_("Word 2"),IO::Integer,IO::Default));
 	}
 
 	string name( )	{ return _("Float: Merge from words"); }
@@ -544,6 +545,40 @@ class floatMergeWord : public TFunction
 	    union { uint32_t i; float f; } wl;
 	    wl.i = ((val->getI(2)&0xffff)<<16) | (val->getI(1)&0xffff);
 	    val->setR(0,wl.f);
+	}
+};
+
+//*************************************************
+//* Merge float from words                        *
+//*************************************************
+class CRC : public TFunction
+{
+    public:
+	CRC( ) : TFunction("CRC", SSPC_ID)
+	{
+	    ioAdd(new IO("rez",_("Result"),IO::Integer,IO::Return));
+	    ioAdd(new IO("data",_("Data"),IO::String,IO::Default));
+	    ioAdd(new IO("poly",_("Polynomial (reversion)"),IO::Integer,IO::Default,"40961"));	//0xA001
+	    ioAdd(new IO("width",_("Width"),IO::Integer,IO::Default,"16"));
+	    ioAdd(new IO("init",_("Initial"),IO::Integer,IO::Default,"-1"));	//0xFFFFFFFFFFFFFFFF
+	}
+
+	string name( )	{ return _("Cyclic Redundancy Code (CRC)"); }
+	string descr( )	{ return _("Unified Cyclic Redundancy Code implement for 8-64 bits width."); }
+
+	void calc( TValFunc *val )
+	{
+	    int wdth = vmin(64, vmax(1,val->getI(3)));
+	    uint64_t mask = 0xFFFFFFFFFFFFFFFFll >> (64-wdth);
+	    uint64_t CRC = val->getI(4) & mask;
+	    uint64_t pat = val->getI(2) & mask;
+	    string data = val->getS(1);
+	    for(unsigned i = 0; i < data.size(); i++)
+	    {
+		CRC ^= (uint8_t)data[i];
+		for(char j = 0; j < 8; j++) CRC = (CRC&1) ? (CRC>>1)^pat : (CRC>>1);
+	    }
+	    val->setI(0, (int64_t)CRC);
 	}
 };
 

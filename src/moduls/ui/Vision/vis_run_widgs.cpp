@@ -1,7 +1,7 @@
 
 //OpenSCADA system module UI.Vision file: vis_run_widgs.cpp
 /***************************************************************************
- *   Copyright (C) 2007-2008 by Roman Savochenko                           *
+ *   Copyright (C) 2007-2014 by Roman Savochenko                           *
  *   rom_as@diyaorg.dp.ua                                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -28,6 +28,7 @@
 #include <QStatusBar>
 
 #include <tsys.h>
+#include "../VCAEngine/types.h"
 
 #include "tvision.h"
 #include "vis_shapes.h"
@@ -35,6 +36,7 @@
 #include "vis_run_widgs.h"
 
 using namespace VISION;
+using namespace VCA;
 
 //*************************************************
 //* Shape widget view runtime mode                *
@@ -73,12 +75,12 @@ VisRun *RunWdgView::mainWin( )
 
 string RunWdgView::pgGrp( )
 {
-    return property("pgGrp").toString().toAscii().data();
+    return property("pgGrp").toString().toStdString();
 }
 
 string RunWdgView::pgOpenSrc( )
 {
-    return property("pgOpenSrc").toString().toAscii().data();
+    return property("pgOpenSrc").toString().toStdString();
 }
 
 void RunWdgView::setPgOpenSrc( const string &vl )
@@ -104,7 +106,7 @@ void RunWdgView::update( bool full, XMLNode *aBr, bool FullTree )
     {
 	aBr = new XMLNode("get");
 	aBr->setAttr("path",id()+"/%2fserv%2fattrBr")->
-	    setAttr("tm",TSYS::uint2str(full?0:mainWin()->reqTm()))->setAttr("FullTree",FullTree?"1":"0");
+	    setAttr("tm",u2s(full?0:mainWin()->reqTm()))->setAttr("FullTree",FullTree?"1":"0");
 	cntrIfCmd(*aBr);
 	reqBrCr = true;
     }
@@ -202,43 +204,31 @@ bool RunWdgView::attrSet( const string &attr, const string &val, int uiPrmPos )
 
     switch(uiPrmPos)
     {
-	case -2:	//focus
+	case A_COM_FOCUS:
 	    if((bool)atoi(val.c_str()) == hasFocus())	break;
 	    if((bool)atoi(val.c_str()))	setFocus(Qt::OtherFocusReason);
 	    return true;
-	case -3:	//perm
+	case A_PERM:
 	    setPermCntr(atoi(val.c_str())&SEC_WR);
 	    setPermView(atoi(val.c_str())&SEC_RD);
 	    return true;
-	case -4:        //page name
-            setWindowTitle(val.c_str());
-            break;
-	case 3:		//pgOpenSrc
-	    setProperty("pgOpenSrc",val.c_str());
-	    return true;
-	case 4:		//pgGrp
-	    setProperty("pgGrp",val.c_str());
-	    return true;
-	case 5:         //en
-            setProperty("isVisible", atoi(val.c_str()) && (permView() || dynamic_cast<RunPageView*>(this)));
-            return true;
-	case 6:		//active
-	    setProperty("active",(bool)atoi(val.c_str()));
-	    return true;
-	case 11:	//geomZ
+	case A_PG_NAME:	setWindowTitle(val.c_str());	break;
+	case A_PG_OPEN_SRC: setProperty("pgOpenSrc",val.c_str());	return true;
+	case A_PG_GRP: setProperty("pgGrp",val.c_str());		return true;
+	case A_EN: setProperty("isVisible", atoi(val.c_str()) && (permView() || dynamic_cast<RunPageView*>(this)));	return true;
+	case A_ACTIVE: setProperty("active",(bool)atoi(val.c_str()));	return true;
+	case A_GEOM_Z:
 	    if(!allAttrLoad() && !dynamic_cast<RunPageView*>(this))
 	    {
 		RunWdgView *wdg = qobject_cast<RunWdgView*>(parentWidget());
 		if(wdg) { wdg->orderUpdate(); wdg->QWidget::update(); }
 	    }
 	    return true;
-	case 16:	//tipStatus
+	case A_TIP_STATUS:
 	    if(val.size() && mainWin()->masterPg() == this)
 		mainWin()->statusBar()->showMessage(val.c_str(), 10000);
 	    return true;
-	case 17:	//contextMenu
-	    setProperty("contextMenu",val.c_str());
-	    return true;
+	case A_CTX_MENU: setProperty("contextMenu",val.c_str());	return true;
     }
 
     return rez;
@@ -256,11 +246,12 @@ string RunWdgView::resGet( const string &res )
 
 bool RunWdgView::isVisible( QPoint pos )
 {
-    //> Clear background and draw transparent
+    //Clear background and draw transparent
     QPalette plt = palette();
     plt.setBrush(QPalette::Window,QColor(0,0,0,0));
     setPalette(plt);
-    //> Grab widget and check it for no zero
+
+    //Grab widget and check it for no zero
     return QPixmap::grabWidget(this).toImage().pixel(pos);
 }
 
@@ -300,7 +291,7 @@ bool RunWdgView::event( QEvent *event )
 		QAction *actTmp;
 		QMenu popup;
 		string sln;
-		for(int off = 0; (sln=TSYS::strSepParse(property("contextMenu").toString().toAscii().data(),0,'\n',&off)).size(); )
+		for(int off = 0; (sln=TSYS::strSepParse(property("contextMenu").toString().toStdString(),0,'\n',&off)).size(); )
 		{
 		    actTmp = new QAction(TSYS::strSepParse(sln,0,':').c_str(),this);
 		    actTmp->setWhatsThis(TSYS::strSepParse(sln,1,':').c_str());
@@ -322,8 +313,8 @@ bool RunWdgView::event( QEvent *event )
     if(WdgView::event(event) || (shape&&shape->event(this,event)))	return true;
 
     //> Key events process for send to model
-    string mod_ev;
-    map<string,string> attrs;
+    string mod_ev, evs;
+    AttrValS attrs;
     if(property("active").toBool() && permCntr())
     switch(event->type())
     {
@@ -336,118 +327,118 @@ bool RunWdgView::event( QEvent *event )
 	    if(QApplication::keyboardModifiers()&Qt::ControlModifier)	mod_ev += "Ctrl";
 	    if(QApplication::keyboardModifiers()&Qt::AltModifier)	mod_ev += "Alt";
 	    if(QApplication::keyboardModifiers()&Qt::ShiftModifier)	mod_ev += "Shift";
-	    if(((QKeyEvent*)event)->nativeScanCode())
-		attrs["event"] = mod_ev+"SC#"+TSYS::int2str(((QKeyEvent*)event)->nativeScanCode(),TSYS::Hex);
+	    if(((QKeyEvent*)event)->nativeScanCode()) evs = mod_ev+"SC#"+i2s(((QKeyEvent*)event)->nativeScanCode(),TSYS::Hex);
 	    switch(((QKeyEvent*)event)->key())
 	    {
-		case Qt::Key_Escape:	mod_ev+="Esc";		break;
-		case Qt::Key_Backspace:	mod_ev+="BackSpace";	break;
-		case Qt::Key_Return:	mod_ev+="Return";	break;
-		case Qt::Key_Enter:	mod_ev+="Enter";	break;
-		case Qt::Key_Insert:	mod_ev+="Insert";	break;
-		case Qt::Key_Delete:	mod_ev+="Delete";	break;
-		case Qt::Key_Pause:	mod_ev+="Pause";	break;
-		case Qt::Key_Print:	mod_ev+="Print";	break;
-		//case Qt::Key_SysReq:	mod_ev+="SysReq";	break;
-		//case Qt::Key_Clear:	mod_ev+="Clear";	break;
-		case Qt::Key_Home:	mod_ev+="Home";		break;
-		case Qt::Key_End:	mod_ev+="End";		break;
-		case Qt::Key_Left:	mod_ev+="Left";		break;
-		case Qt::Key_Up:	mod_ev+="Up";		break;
-		case Qt::Key_Right:	mod_ev+="Right";	break;
-		case Qt::Key_Down:	mod_ev+="Down";		break;
-		case Qt::Key_PageUp:	mod_ev+="PageUp";	break;
-		case Qt::Key_PageDown:	mod_ev+="PageDown";	break;
-		case Qt::Key_F1:	mod_ev+="F1";		break;
-		case Qt::Key_F2:	mod_ev+="F2";		break;
-		case Qt::Key_F3:	mod_ev+="F3";		break;
-		case Qt::Key_F4:	mod_ev+="F4";		break;
-		case Qt::Key_F5:	mod_ev+="F5";		break;
-		case Qt::Key_F6:	mod_ev+="F6";		break;
-		case Qt::Key_F7:	mod_ev+="F7";		break;
-		case Qt::Key_F8:	mod_ev+="F8";		break;
-		case Qt::Key_F9:	mod_ev+="F9";		break;
-		case Qt::Key_F10:	mod_ev+="F10";		break;
-		case Qt::Key_F11:	mod_ev+="F11";		break;
-		case Qt::Key_F12:	mod_ev+="F12";		break;
-		case Qt::Key_F13:	mod_ev+="F13";		break;
-		case Qt::Key_F14:	mod_ev+="F14";		break;
-		case Qt::Key_F15:	mod_ev+="F15";		break;
-		case Qt::Key_F16:	mod_ev+="F16";		break;
-		case Qt::Key_F17:	mod_ev+="F17";		break;
-		case Qt::Key_F18:	mod_ev+="F18";		break;
-		case Qt::Key_F19:	mod_ev+="F19";		break;
-		case Qt::Key_F20:	mod_ev+="F20";		break;
-		case Qt::Key_F21:	mod_ev+="F21";		break;
-		case Qt::Key_F22:	mod_ev+="F22";		break;
-		case Qt::Key_F23:	mod_ev+="F23";		break;
-		case Qt::Key_F24:	mod_ev+="F24";		break;
-		case Qt::Key_F25:	mod_ev+="F25";		break;
-		case Qt::Key_F26:	mod_ev+="F26";		break;
-		case Qt::Key_F27:	mod_ev+="F27";		break;
-		case Qt::Key_F28:	mod_ev+="F28";		break;
-		case Qt::Key_F29:	mod_ev+="F29";		break;
-		case Qt::Key_F30:	mod_ev+="F30";		break;
-		case Qt::Key_F31:	mod_ev+="F31";		break;
-		case Qt::Key_F32:	mod_ev+="F32";		break;
-		case Qt::Key_F33:	mod_ev+="F33";		break;
-		case Qt::Key_F34:	mod_ev+="F34";		break;
-		case Qt::Key_F35:	mod_ev+="F35";		break;
-		case Qt::Key_Space:	mod_ev+="Space";	break;
-		case Qt::Key_Apostrophe:mod_ev+="Apostrophe";	break;
-		case Qt::Key_Asterisk:	mod_ev+="Asterisk";	break;
-		case Qt::Key_Plus:	mod_ev+="Plus";		break;
-		case Qt::Key_Comma:	mod_ev+="Comma";	break;
-		case Qt::Key_Minus:	mod_ev+="Minus";	break;
-		case Qt::Key_Period:	mod_ev+="Period";	break;
-		case Qt::Key_Slash:	mod_ev+="Slash";	break;
-		case Qt::Key_0:		mod_ev+="0";		break;
-		case Qt::Key_1:		mod_ev+="1";		break;
-		case Qt::Key_2:		mod_ev+="2";		break;
-		case Qt::Key_3:		mod_ev+="3";		break;
-		case Qt::Key_4:		mod_ev+="4";		break;
-		case Qt::Key_5:		mod_ev+="5";		break;
-		case Qt::Key_6:		mod_ev+="6";		break;
-		case Qt::Key_7:		mod_ev+="7";		break;
-		case Qt::Key_8:		mod_ev+="8";		break;
-		case Qt::Key_9:		mod_ev+="9";		break;
-		case Qt::Key_Semicolon:	mod_ev+="Semicolon";	break;
-		case Qt::Key_Equal:	mod_ev+="Equal";	break;
-		case Qt::Key_A:		mod_ev+="A";		break;
-		case Qt::Key_B:		mod_ev+="B";		break;
-		case Qt::Key_C:		mod_ev+="C";		break;
-		case Qt::Key_D:		mod_ev+="D";		break;
-		case Qt::Key_E:		mod_ev+="E";		break;
-		case Qt::Key_F:		mod_ev+="F";		break;
-		case Qt::Key_G:		mod_ev+="G";		break;
-		case Qt::Key_H:		mod_ev+="H";		break;
-		case Qt::Key_I:		mod_ev+="I";		break;
-		case Qt::Key_J:		mod_ev+="J";		break;
-		case Qt::Key_K:		mod_ev+="K";		break;
-		case Qt::Key_L:		mod_ev+="L";		break;
-		case Qt::Key_M:		mod_ev+="M";		break;
-		case Qt::Key_N:		mod_ev+="N";		break;
-		case Qt::Key_O:		mod_ev+="O";		break;
-		case Qt::Key_P:		mod_ev+="P";		break;
-		case Qt::Key_Q:		mod_ev+="Q";		break;
-		case Qt::Key_R:		mod_ev+="R";		break;
-		case Qt::Key_S:		mod_ev+="S";		break;
-		case Qt::Key_T:		mod_ev+="T";		break;
-		case Qt::Key_U:		mod_ev+="U";		break;
-		case Qt::Key_V:		mod_ev+="V";		break;
-		case Qt::Key_W:		mod_ev+="W";		break;
-		case Qt::Key_X:		mod_ev+="X";		break;
-		case Qt::Key_Y:		mod_ev+="Y";		break;
-		case Qt::Key_Z:		mod_ev+="Z";		break;
-		case Qt::Key_BracketLeft:	mod_ev+="BracketLeft";	break;
-		case Qt::Key_Backslash:	mod_ev+="BackSlash";	break;
-		case Qt::Key_BracketRight:	mod_ev+="BracketRight";	break;
-		case Qt::Key_QuoteLeft:	mod_ev+="QuoteLeft";	break;
+		case Qt::Key_Escape:	mod_ev += "Esc";	break;
+		case Qt::Key_Backspace:	mod_ev += "BackSpace";	break;
+		case Qt::Key_Return:	mod_ev += "Return";	break;
+		case Qt::Key_Enter:	mod_ev += "Enter";	break;
+		case Qt::Key_Insert:	mod_ev += "Insert";	break;
+		case Qt::Key_Delete:	mod_ev += "Delete";	break;
+		case Qt::Key_Pause:	mod_ev += "Pause";	break;
+		case Qt::Key_Print:	mod_ev += "Print";	break;
+		//case Qt::Key_SysReq:	mod_ev += "SysReq";	break;
+		//case Qt::Key_Clear:	mod_ev += "Clear";	break;
+		case Qt::Key_Home:	mod_ev += "Home";	break;
+		case Qt::Key_End:	mod_ev += "End";	break;
+		case Qt::Key_Left:	mod_ev += "Left";	break;
+		case Qt::Key_Up:	mod_ev += "Up";		break;
+		case Qt::Key_Right:	mod_ev += "Right";	break;
+		case Qt::Key_Down:	mod_ev += "Down";	break;
+		case Qt::Key_PageUp:	mod_ev += "PageUp";	break;
+		case Qt::Key_PageDown:	mod_ev += "PageDown";	break;
+		case Qt::Key_F1:	mod_ev += "F1";		break;
+		case Qt::Key_F2:	mod_ev += "F2";		break;
+		case Qt::Key_F3:	mod_ev += "F3";		break;
+		case Qt::Key_F4:	mod_ev += "F4";		break;
+		case Qt::Key_F5:	mod_ev += "F5";		break;
+		case Qt::Key_F6:	mod_ev += "F6";		break;
+		case Qt::Key_F7:	mod_ev += "F7";		break;
+		case Qt::Key_F8:	mod_ev += "F8";		break;
+		case Qt::Key_F9:	mod_ev += "F9";		break;
+		case Qt::Key_F10:	mod_ev += "F10";	break;
+		case Qt::Key_F11:	mod_ev += "F11";	break;
+		case Qt::Key_F12:	mod_ev += "F12";	break;
+		case Qt::Key_F13:	mod_ev += "F13";	break;
+		case Qt::Key_F14:	mod_ev += "F14";	break;
+		case Qt::Key_F15:	mod_ev += "F15";	break;
+		case Qt::Key_F16:	mod_ev += "F16";	break;
+		case Qt::Key_F17:	mod_ev += "F17";	break;
+		case Qt::Key_F18:	mod_ev += "F18";	break;
+		case Qt::Key_F19:	mod_ev += "F19";	break;
+		case Qt::Key_F20:	mod_ev += "F20";	break;
+		case Qt::Key_F21:	mod_ev += "F21";	break;
+		case Qt::Key_F22:	mod_ev += "F22";	break;
+		case Qt::Key_F23:	mod_ev += "F23";	break;
+		case Qt::Key_F24:	mod_ev += "F24";	break;
+		case Qt::Key_F25:	mod_ev += "F25";	break;
+		case Qt::Key_F26:	mod_ev += "F26";	break;
+		case Qt::Key_F27:	mod_ev += "F27";	break;
+		case Qt::Key_F28:	mod_ev += "F28";	break;
+		case Qt::Key_F29:	mod_ev += "F29";	break;
+		case Qt::Key_F30:	mod_ev += "F30";	break;
+		case Qt::Key_F31:	mod_ev += "F31";	break;
+		case Qt::Key_F32:	mod_ev += "F32";	break;
+		case Qt::Key_F33:	mod_ev += "F33";	break;
+		case Qt::Key_F34:	mod_ev += "F34";	break;
+		case Qt::Key_F35:	mod_ev += "F35";	break;
+		case Qt::Key_Space:	mod_ev += "Space";	break;
+		case Qt::Key_Apostrophe:mod_ev += "Apostrophe";	break;
+		case Qt::Key_Asterisk:	mod_ev += "Asterisk";	break;
+		case Qt::Key_Plus:	mod_ev += "Plus";	break;
+		case Qt::Key_Comma:	mod_ev += "Comma";	break;
+		case Qt::Key_Minus:	mod_ev += "Minus";	break;
+		case Qt::Key_Period:	mod_ev += "Period";	break;
+		case Qt::Key_Slash:	mod_ev += "Slash";	break;
+		case Qt::Key_0:		mod_ev += "0";		break;
+		case Qt::Key_1:		mod_ev += "1";		break;
+		case Qt::Key_2:		mod_ev += "2";		break;
+		case Qt::Key_3:		mod_ev += "3";		break;
+		case Qt::Key_4:		mod_ev += "4";		break;
+		case Qt::Key_5:		mod_ev += "5";		break;
+		case Qt::Key_6:		mod_ev += "6";		break;
+		case Qt::Key_7:		mod_ev += "7";		break;
+		case Qt::Key_8:		mod_ev += "8";		break;
+		case Qt::Key_9:		mod_ev += "9";		break;
+		case Qt::Key_Semicolon:	mod_ev += "Semicolon";	break;
+		case Qt::Key_Equal:	mod_ev += "Equal";	break;
+		case Qt::Key_A:		mod_ev += "A";		break;
+		case Qt::Key_B:		mod_ev += "B";		break;
+		case Qt::Key_C:		mod_ev += "C";		break;
+		case Qt::Key_D:		mod_ev += "D";		break;
+		case Qt::Key_E:		mod_ev += "E";		break;
+		case Qt::Key_F:		mod_ev += "F";		break;
+		case Qt::Key_G:		mod_ev += "G";		break;
+		case Qt::Key_H:		mod_ev += "H";		break;
+		case Qt::Key_I:		mod_ev += "I";		break;
+		case Qt::Key_J:		mod_ev += "J";		break;
+		case Qt::Key_K:		mod_ev += "K";		break;
+		case Qt::Key_L:		mod_ev += "L";		break;
+		case Qt::Key_M:		mod_ev += "M";		break;
+		case Qt::Key_N:		mod_ev += "N";		break;
+		case Qt::Key_O:		mod_ev += "O";		break;
+		case Qt::Key_P:		mod_ev += "P";		break;
+		case Qt::Key_Q:		mod_ev += "Q";		break;
+		case Qt::Key_R:		mod_ev += "R";		break;
+		case Qt::Key_S:		mod_ev += "S";		break;
+		case Qt::Key_T:		mod_ev += "T";		break;
+		case Qt::Key_U:		mod_ev += "U";		break;
+		case Qt::Key_V:		mod_ev += "V";		break;
+		case Qt::Key_W:		mod_ev += "W";		break;
+		case Qt::Key_X:		mod_ev += "X";		break;
+		case Qt::Key_Y:		mod_ev += "Y";		break;
+		case Qt::Key_Z:		mod_ev += "Z";		break;
+		case Qt::Key_BracketLeft: mod_ev += "BracketLeft"; break;
+		case Qt::Key_Backslash:	mod_ev += "BackSlash";	break;
+		case Qt::Key_BracketRight: mod_ev += "BracketRight"; break;
+		case Qt::Key_QuoteLeft:	mod_ev += "QuoteLeft";	break;
 		default:
-		    mod_ev += "#"+TSYS::int2str(((QKeyEvent*)event)->key(),TSYS::Hex);
+		    mod_ev += "#"+i2s(((QKeyEvent*)event)->key(),TSYS::Hex);
 		    break;
 	    }
-	    attrs["event"] += (attrs["event"].size()?"\n":"")+mod_ev;
+	    evs += (evs.size()?"\n":"")+mod_ev;
+	    attrs.push_back(std::make_pair("event",evs));
 	    attrsSet(attrs);
 	    return true;
 	case QEvent::MouseButtonPress:
@@ -472,8 +463,16 @@ bool RunWdgView::event( QEvent *event )
 	    if(!isVisible(mapFromGlobal(cursor().pos()))) break;
 	    attrSet("event", "key_mouseDblClick");
 	    return true;
-	case QEvent::FocusIn:	attrs["focus"] = "1"; attrs["event"] = "ws_FocusIn"; attrsSet(attrs); return true;
-	case QEvent::FocusOut:	attrs["focus"] = "0"; attrs["event"] = "ws_FocusOut"; attrsSet(attrs); return true;
+	case QEvent::FocusIn:
+	    attrs.push_back(std::make_pair("focus","1"));
+	    attrs.push_back(std::make_pair("event","ws_FocusIn"));
+	    attrsSet(attrs);
+	    return true;
+	case QEvent::FocusOut:
+	    attrs.push_back(std::make_pair("focus","0"));
+	    attrs.push_back(std::make_pair("event","ws_FocusOut"));
+	    attrsSet(attrs);
+	    return true;
 	default: break;
     }
 
@@ -516,7 +515,8 @@ bool RunWdgView::event( QEvent *event )
 RunPageView::RunPageView( const string &iwid, VisRun *mainWind, QWidget* parent, Qt::WindowFlags f ) :
     RunWdgView(iwid,0,mainWind,parent,f), wx_scale(1.0), wy_scale(1.0)
 {
-
+    resize(50, 50);
+    load("");
 }
 
 RunPageView::~RunPageView( )
@@ -527,13 +527,13 @@ RunPageView::~RunPageView( )
 
 float RunPageView::xScale( bool full )
 {
-    if( full ) return mainWin()->xScale()*WdgView::xScale();
+    if(full) return mainWin()->xScale()*WdgView::xScale();
     return WdgView::xScale();
 }
 
 float RunPageView::yScale( bool full )
 {
-    if( full ) return mainWin()->yScale()*WdgView::yScale();
+    if(full) return mainWin()->yScale()*WdgView::yScale();
     return WdgView::yScale();
 }
 
@@ -563,7 +563,7 @@ RunPageView *RunPageView::findOpenPage( const string &ipg )
 	if(rwdg->property("isVisible").toBool() && rwdg->root() == "Box")
 	{
 	    if(rwdg->pgOpenSrc() == ipg && !rwdg->property("inclPg").toString().isEmpty())
-		return (RunPageView*)TSYS::str2addr(rwdg->property("inclPg").toString().toAscii().data());
+		return (RunPageView*)TSYS::str2addr(rwdg->property("inclPg").toString().toStdString());
 	    if(((ShapeBox::ShpDt*)rwdg->shpData)->inclWidget)
 	    {
 		pg = ((ShapeBox::ShpDt*)rwdg->shpData)->inclWidget->findOpenPage(ipg);
@@ -609,12 +609,12 @@ bool RunPageView::callPage( const string &pg_it, const string &pgGrp, const stri
     //> Check for open child page or for unknown and empty source pages open as master page child windows
     if((pgGrp.empty() && pgSrc == id()) || this == mainWin()->master_pg)
     {
-	RunPageView *pg = new RunPageView(pg_it, mainWin(), this);
-	pg->setAttribute( Qt::WA_DeleteOnClose );
-	pg->setWindowFlags( Qt::Tool );
-	pg->load("");
-	pg->moveF(QPointF(mapToGlobal(pos()).x()+sizeF().width()/2-pg->sizeF().width()/2,
-			  mapToGlobal(pos()).y()+sizeF().height()/2-pg->sizeF().height()/2));
+	RunPageView *pg = new RunPageView(pg_it, mainWin(), this, Qt::Tool);
+	pg->setAttribute(Qt::WA_DeleteOnClose);
+	//pg->load("");
+	//pg->moveF(QCursor::pos());
+	//pg->moveF(QPointF(mapToGlobal(pos()).x()+sizeF().width()/2-pg->sizeF().width()/2,
+	//		  mapToGlobal(pos()).y()+sizeF().height()/2-pg->sizeF().height()/2));
 	pg->setMinimumSize(pg->frameGeometry().size());
 	pg->setMaximumSize(pg->frameGeometry().size());
 	pg->setWindowState(pg->windowState() | Qt::WindowActive);
@@ -661,34 +661,35 @@ VisRun *SndPlay::mainWin( )	{ return (VisRun *)parent(); }
 
 void SndPlay::run( )
 {
-    if( mPlayData.empty() )	return;
+    if(mPlayData.empty()) return;
 
     size_t comPos = 0;
-    string com = mod->playCom( );
+    string com = mod->playCom();
     string srcFile = "/var/tmp/oscadaPlayTmp_"+mainWin()->workSess( );
 
     //> Put source file name to command
     bool srcToPipe = false;
-    if( (comPos=com.find("%f")) != string::npos )
-	com.replace( comPos, 2, srcFile.c_str() );
+    if((comPos=com.find("%f")) != string::npos)	com.replace(comPos, 2, srcFile.c_str());
     else srcToPipe = true;
 
     //> Write play data to file
-    if( !srcToPipe )
+    if(!srcToPipe)
     {
-	FILE *fp = fopen( srcFile.c_str(), "w" );
-	if( !fp )	{ mPlayData.clear(); return; }
-	fwrite( mPlayData.data(), 1, mPlayData.size(), fp );
+	FILE *fp = fopen(srcFile.c_str(), "w");
+	if(!fp)	{ mPlayData.clear(); return; }
+	if(fwrite(mPlayData.data(),1,mPlayData.size(),fp) != mPlayData.size())
+	    mess_err(mod->nodePath().c_str(), _("Error write to: %s"), srcFile.c_str());
 	fclose(fp);
     }
 
     //> Call play command
-    FILE *fp = popen( com.c_str(), "w" );
-    if( !fp )		{ mPlayData.clear(); return; }
+    FILE *fp = popen(com.c_str(), "w");
+    if(!fp) { mPlayData.clear(); return; }
     //> Write data to pipe
-    if( srcToPipe )	fwrite( mPlayData.data(), mPlayData.size(), 1, fp );
+    if(srcToPipe && fwrite(mPlayData.data(),mPlayData.size(),1,fp) != mPlayData.size())
+	mess_err(mod->nodePath().c_str(), _("Error write to: %s"), srcFile.c_str());
     pclose(fp);
-    if( !srcToPipe )	remove( srcFile.c_str() );
+    if(!srcToPipe) remove(srcFile.c_str());
 
     mPlayData.clear();
 };
@@ -706,8 +707,8 @@ VisRun *StylesStBar::mainWin( )	{ return (VisRun *)window(); }
 void StylesStBar::setStyle( int istl, const string &nm )
 {
     mStyle = istl;
-    if( mStyle < 0 ) setText( _("No style") );
-    else if( !nm.empty() ) setText( nm.c_str() );
+    if(mStyle < 0) setText(_("No style"));
+    else if(!nm.empty()) setText(nm.c_str());
     else
     {
 	XMLNode req("get");
@@ -726,14 +727,14 @@ bool StylesStBar::styleSel( )
     req.setAttr("path","/ses_"+mainWin()->workSess()+"/%2fobj%2fcfg%2fstLst");
     mainWin()->cntrIfCmd(req);
 
-    if( req.childSize() <= 1 ) return false;
+    if(req.childSize() <= 1) return false;
 
-    InputDlg dlg( this, mainWin()->windowIcon(),_("Select your style from list."),_("Style select"),false,false);
+    InputDlg dlg(this, mainWin()->windowIcon(), _("Select your style from list."), _("Style select"), false, false);
     QLabel *lab = new QLabel(_("Style:"),&dlg);
-    lab->setSizePolicy( QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred) );
-    dlg.edLay()->addWidget( lab, 0, 0 );
+    lab->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred));
+    dlg.edLay()->addWidget(lab, 0, 0);
     QComboBox *stls = new QComboBox(&dlg);
-    dlg.edLay()->addWidget( stls, 0, 1 );
+    dlg.edLay()->addWidget(stls, 0, 1);
     for(unsigned i_s = 0; i_s < req.childSize(); i_s++)
     {
 	stls->addItem(req.childGet(i_s)->text().c_str(),atoi(req.childGet(i_s)->attr("id").c_str()));
@@ -741,10 +742,10 @@ bool StylesStBar::styleSel( )
 	    stls->setCurrentIndex(i_s);
     }
     dlg.resize(300,120);
-    if( dlg.exec() == QDialog::Accepted && stls->currentIndex() >= 0 )
+    if(dlg.exec() == QDialog::Accepted && stls->currentIndex() >= 0)
     {
-	setStyle( stls->itemData(stls->currentIndex()).toInt(), stls->itemText(stls->currentIndex()).toAscii().data() );
-	emit styleChanged( );
+	setStyle(stls->itemData(stls->currentIndex()).toInt(), stls->itemText(stls->currentIndex()).toStdString());
+	emit styleChanged();
 	return true;
     }
 
@@ -753,6 +754,6 @@ bool StylesStBar::styleSel( )
 
 bool StylesStBar::event( QEvent *event )
 {
-    if( event->type() == QEvent::MouseButtonDblClick )	styleSel();
-    return QLabel::event( event );
+    if(event->type() == QEvent::MouseButtonDblClick)	styleSel();
+    return QLabel::event(event);
 }

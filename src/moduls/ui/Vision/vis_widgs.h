@@ -53,6 +53,8 @@ class QFontComboBox;
 class QSpinBox;
 class QCheckBox;
 
+typedef vector<pair<string,string> > AttrValS;
+
 namespace VISION
 {
     //*********************************************
@@ -254,7 +256,7 @@ namespace VISION
 	    QString text( );
 
 	    void setText( const QString & );
-	    void setSnthHgl( XMLNode nd );
+	    void setSnthHgl(XMLNode nd);
 
 	    QTextEdit *workWdg( )	{ return ed_fld; }
 
@@ -328,7 +330,7 @@ namespace VISION
 	    void	resizeF( const QSizeF &size );
 	    void	setAllAttrLoad( bool vl )	{ mAllAttrLoad = vl; }
 
-	    void	attrsSet( map<string,string> &attrs );
+	    void	attrsSet( AttrValS &attrs );
 	    virtual bool attrSet( const string &attr, const string &val, int uiPrmPos = 0 );
 	    virtual string resGet( const string &res );
 

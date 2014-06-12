@@ -4,8 +4,8 @@ Summary(ru_RU.UTF8): Открытая SCADA система.
 Summary(uk_UA.UTF8): Відкрита SCADA система.
 Summary(de_DE.UTF8): Open SCADA-System.
 Name: openscada
-Version: 0.8.1
-Release: 0.1
+Version: 0.8.0.10
+Release: 1
 Source: openscada-%version.tar.lzma
 Source1: openscada-res-%version.tar.lzma
 License: GPLv2
@@ -20,8 +20,8 @@ URL: http://oscada.org
 AutoReq: noshell
 %set_verify_elf_method no
 BuildRequires: glibc-devel gcc-c++ libpcre-devel libgd2-devel
-BuildRequires: libMySQL-devel libsqlite3-devel firebird-devel postgresql9.1-devel
-BuildRequires: libsensors3-devel libnet-snmp-devel libportaudio2-devel libcomedi-devel libqt4-devel libfftw3-devel
+BuildRequires: libMySQL-devel libsqlite3-devel firebird-devel postgresql-devel
+BuildRequires: libsensors3-devel libnet-snmp-devel libportaudio2-devel libqt4-devel libfftw3-devel
 %else
 %define _initdir /etc/init.d
 %define _desktopdir %_datadir/applications
@@ -157,7 +157,6 @@ Summary(ru_RU.UTF8): БД и конфигурация модели "АГЛКС" 
 Summary(uk_UA.UTF8): БД та конфігурація моделі "АГЛКС" (Демо: EN,RU,UK).
 Summary(de_DE.UTF8): Datenbanken und Konfigurationsdateien Modell "AGLKS" (Demo: EN,RU,UK).
 Group: Graphics
-BuildArch: noarch
 Requires: %name %name-LibDB.Main %name-LibDB.VCA
 %description Model.AGLKS
 The %{name}-Model.AGLKS package includes model "AGLKS" data bases and config.
@@ -186,7 +185,6 @@ Summary(ru_RU.UTF8): БД и конфигурация модели "Котёл" 
 Summary(uk_UA.UTF8): БД та конфігурація моделі "Котел" (EN,RU,UK).
 Summary(de_DE.UTF8): Datenbanken und Konfigurationsdateien Modell "Kessel" (EN,RU,UK).
 Group: Graphics
-BuildArch: noarch
 Requires: %name %name-LibDB.Main %name-LibDB.VCA
 %description Model.Boiler
 The %{name}-Model.Boiler package model "Boiler" data bases and config.
@@ -221,7 +219,7 @@ autoreconf -ivf
 
 %configure
 
-%if %_vendor == "suse"
+%if %_vendor == "redhat" || %_vendor == "suse"
 %__make
 %else
 %make
@@ -230,7 +228,37 @@ autoreconf -ivf
 %install
 %makeinstall
 rm -f %buildroot/%_libdir/openscada/*.la
+install -m 755 -d %buildroot/var/spool/openscada/{DATA,icons,LibsDB,AGLKS,Boiler}
+install -m 755 -d %buildroot/var/spool/openscada/ARCHIVES/{MESS,VAL}
+install -m 644 -pD data/oscada.xml %buildroot/%_sysconfdir/oscada.xml
+install -m 644 -pD data/oscada_start.xml %buildroot/%_sysconfdir/oscada_start.xml
+install -m 755 -pD data/openscada_start %buildroot/%_bindir/openscada_start
+install -m 644 -pD data/openscada.desktop %buildroot/%_desktopdir/openscada.desktop
+install -m 644 -pD data/openscada.png %buildroot/%_iconsdir/openscada.png
 install -m 755 -pD data/oscada_ALT.init %buildroot/%_initdir/oscadad
+echo "OpenSCADA data dir" > %buildroot/var/spool/openscada/DATA/.info
+install -m 644 data/icons/* %buildroot/var/spool/openscada/icons
+echo "OpenSCADA messages archive dir" > %buildroot/var/spool/openscada/ARCHIVES/MESS/.info
+echo "OpenSCADA values archive dir" > %buildroot/var/spool/openscada/ARCHIVES/VAL/.info
+
+install -m 644 data/LibsDB/*.db %buildroot/var/spool/openscada/LibsDB
+
+install -m 644 data/ModelsDB/AGLKS/*.db %buildroot/var/spool/openscada/AGLKS
+install -m 644 -pD data/ModelsDB/AGLKS/oscada_AGLKS.xml %buildroot/%_sysconfdir/oscada_AGLKS.xml
+install -m 755 -pD data/ModelsDB/AGLKS/openscada_AGLKS %buildroot/%_bindir/openscada_AGLKS
+install -m 755 -pD data/ModelsDB/AGLKS/openscada_demo %buildroot/%_bindir/openscada_demo
+install -m 644 -pD data/ModelsDB/AGLKS/openscada_AGLKS.desktop %buildroot/%_desktopdir/openscada_AGLKS.desktop
+install -m 644 -pD data/ModelsDB/AGLKS/openscada_AGLKS.png %buildroot/%_iconsdir/openscada_AGLKS.png
+install -m 644 -pD data/ModelsDB/AGLKS/openscada_AGLKS.png %buildroot/var/spool/openscada/icons/AGLKS.png
+
+install -m 644 data/ModelsDB/Boiler/*.db %buildroot/var/spool/openscada/Boiler
+install -m 644 -pD data/ModelsDB/Boiler/oscada_Boiler.xml %buildroot/%_sysconfdir/oscada_Boiler.xml
+install -m 755 -pD data/ModelsDB/Boiler/openscada_Boiler %buildroot/%_bindir/openscada_Boiler
+install -m 644 -pD data/ModelsDB/Boiler/openscada_Boiler.desktop %buildroot/%_desktopdir/openscada_Boiler.desktop
+install -m 644 -pD data/ModelsDB/Boiler/openscada_Boiler.png %buildroot/%_iconsdir/openscada_Boiler.png
+install -m 644 -pD data/ModelsDB/Boiler/openscada_Boiler.png %buildroot/var/spool/openscada/icons/Boiler.png
+
+sed -i 's|/usr/lib|%_libdir|' %buildroot/%_sysconfdir/oscada*.xml
 
 %clean
 #rm -rf %buildroot %buildroot/%name-%version
@@ -250,12 +278,12 @@ install -m 755 -pD data/oscada_ALT.init %buildroot/%_initdir/oscadad
 #exclude %_libdir/openscada/*.a
 #exclude %_libdir/openscada/*.la
 %_datadir/locale/*/LC_MESSAGES/*
-##%_datadir/openscada/DATA/.info
-%_datadir/openscada/icons/*
-%exclude %_datadir/openscada/icons/AGLKS.png
-%exclude %_datadir/openscada/icons/Boiler.png
-##%_datadir/openscada/ARCHIVES/MESS/.info
-##%_datadir/openscada/ARCHIVES/VAL/.info
+/var/spool/openscada/DATA/.info
+/var/spool/openscada/icons/*
+%exclude /var/spool/openscada/icons/AGLKS.png
+%exclude /var/spool/openscada/icons/Boiler.png
+/var/spool/openscada/ARCHIVES/MESS/.info
+/var/spool/openscada/ARCHIVES/VAL/.info
 
 %files docEN
 %defattr(-,root,root)
@@ -278,11 +306,11 @@ install -m 755 -pD data/oscada_ALT.init %buildroot/%_initdir/oscadad
 
 %files LibDB.Main
 %defattr(-,root,root)
-%_datadir/openscada/LibsDB/OscadaLibs.db
+/var/spool/openscada/LibsDB/OscadaLibs.db
 
 %files LibDB.VCA
 %defattr(-,root,root)
-%_datadir/openscada/LibsDB/vca*.db
+/var/spool/openscada/LibsDB/vca*.db
 
 %files Model.AGLKS
 %defattr(-,root,root)
@@ -291,8 +319,8 @@ install -m 755 -pD data/oscada_ALT.init %buildroot/%_initdir/oscadad
 %_bindir/openscada_demo
 %_desktopdir/openscada_AGLKS.desktop
 %_iconsdir/openscada_AGLKS.png
-%_datadir/openscada/icons/AGLKS.png
-%_datadir/openscada/AGLKS/*.db
+/var/spool/openscada/icons/AGLKS.png
+/var/spool/openscada/AGLKS/*.db
 
 %files Model.Boiler
 %defattr(-,root,root)
@@ -300,10 +328,40 @@ install -m 755 -pD data/oscada_ALT.init %buildroot/%_initdir/oscadad
 %_bindir/openscada_Boiler
 %_desktopdir/openscada_Boiler.desktop
 %_iconsdir/openscada_Boiler.png
-%_datadir/openscada/icons/Boiler.png
-%_datadir/openscada/Boiler/*.db
+/var/spool/openscada/icons/Boiler.png
+/var/spool/openscada/Boiler/*.db
 
 %changelog
+* Fri May 09 2014 Roman Savochenko <rom_as@oscada.org>
+- Build 0.8.0.10 update to production release.
+
+* Mon Dec 09 2013 Roman Savochenko <rom_as@oscada.org>
+- Build 0.8.0.9 update to production release.
+
+* Mon Sep 16 2013 Roman Savochenko <rom_as@oscada.org>
+- Build 0.8.0.8 update to production release.
+
+* Thu Jul 11 2013 Roman Savochenko <rom_as@oscada.org>
+- Build 0.8.0.7 update to production release.
+
+* Sat May 11 2013 Roman Savochenko <rom_as@oscada.org>
+- Build 0.8.0.6 update to production release.
+
+* Sat Feb 02 2013 Roman Savochenko <rom_as@oscada.org>
+- Build 0.8.0.5 update to production release.
+
+* Tue Nov 13 2012 Roman Savochenko <rom_as@oscada.org>
+- Build 0.8.0.4 update to production release.
+
+* Sat Sep 08 2012 Roman Savochenko <rom_as@oscada.org>
+- Build 0.8.0.3 update to production release.
+
+* Mon Jul 09 2012 Roman Savochenko <rom_as@oscada.org>
+- Build 0.8.0.2 update to production release.
+
+* Sat Jun 09 2012 Roman Savochenko <rom_as@oscada.org>
+- Build 0.8.0.1 update to production release.
+
 * Fri Apr 06 2012 Roman Savochenko <rom_as@oscada.org>
 - Build 0.8.0 release.
 
@@ -356,7 +414,7 @@ install -m 755 -pD data/oscada_ALT.init %buildroot/%_initdir/oscadad
 * Wed Mar 26 2008 Roman Savochenko <rom_as@diyaorg.dp.ua>
 - Rebuilded for support x86_64 several distributives and some build system bugs is fixed.
 
-* Sat Mar 23 2008 Roman Savochenko <rom_as@diyaorg.dp.ua>
+* Sun Mar 23 2008 Roman Savochenko <rom_as@diyaorg.dp.ua>
 - menu files included
 
 * Fri Sep 02 2005 Roman Savochenko <rom_as@fromru.com>
@@ -375,5 +433,5 @@ install -m 755 -pD data/oscada_ALT.init %buildroot/%_initdir/oscadad
 - add languages: ru, uk
 - make packages from 'make -dist' package;
 
-* Thu Oct 15 2003 Roman Savochenko <rom_as@fromru.com>
+* Wed Oct 15 2003 Roman Savochenko <rom_as@fromru.com>
 - Starting

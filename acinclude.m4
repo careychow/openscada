@@ -1333,41 +1333,52 @@ AC_DEFUN([AX_LIB_FFTW3],
 #
 # SYNOPSIS
 #
-#   AX_LIB_QT4()
+#   AX_LIB_Qt()
 #
 # DESCRIPTION
 #
-#   This macro provides tests of availability QT4 library.
+#   This macro provides tests of availability Qt4 or Qt5 library.
 #
 #   This macro calls:
 #
 #     PKG_CHECK_MODULES([QtGui],[QtGui > 4.3.0])
-#     AC_SUBST(QT4_MOC)
-#     AC_SUBST(QT4_RCC)
+#     PKG_CHECK_MODULES([Qt5Widgets],[Qt5Widgets > 5.1.0]
+#     PKG_CHECK_MODULES([Qt5PrintSupport],[Qt5PrintSupport > 5.1.0]
+#     AC_SUBST(Qt_MOC)
+#     AC_SUBST(Qt_RCC)
 #
 #   And sets:
 #
-#     QT4use=true
+#     Qt_use=true
 #
 # LICENSE
 #
-#   Copyright (c) 2011 Roman Savochenko <rom_as@oscada.org>
+#   Copyright (c) 2011-2014 Roman Savochenko <rom_as@oscada.org>
 #
 #   Copying and distribution of this file, with or without modification, are
 #   permitted in any medium without royalty provided the copyright notice
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
-AC_DEFUN([AX_LIB_QT4],
+AC_DEFUN([AX_LIB_Qt],
 [
-    if test "x${QT4use}" = "x"; then
-	PKG_CHECK_MODULES([QtGui],[QtGui > 4.3.0],[],[AC_MSG_ERROR(QT4 library QtGui not found! Install QT4 library development package.)])
-	AC_SUBST(QT4_MOC)
-	AC_SUBST(QT4_RCC)
-	QT4_MOC="$(pkg-config --variable=moc_location QtGui)"
-	QT4_RCC="$(pkg-config --variable=rcc_location QtGui)";
-	if test "x${QT4_MOC}" = "x"; then QT4_MOC="$(pkg-config --variable=prefix QtGui)/bin/moc"; fi
-	if test "x${QT4_RCC}" = "x"; then QT4_RCC="$(pkg-config --variable=prefix QtGui)/bin/rcc"; fi
-	QT4use=true
+    if test "x${Qt_use}" = "x"; then
+	QtGui=QtGui
+	PKG_CHECK_MODULES([QtGui],[QtGui > 4.3.0],[],
+	[
+	    PKG_CHECK_MODULES([Qt5Widgets],[Qt5Widgets > 5.1.0],[],[AC_MSG_ERROR(QT4 or Qt5 library QtGui not found! Install Qt4 or Qt5 library development package.)])
+	    PKG_CHECK_MODULES([Qt5PrintSupport],[Qt5PrintSupport > 5.1.0],[],[AC_MSG_ERROR(Qt5 library Qt5PrintSupport not found! Install Qt5 library development package.)])
+	    QtGui_CFLAGS="$Qt5Widgets_CFLAGS $Qt5PrintSupport_CFLAGS"
+	    QtGui_LIBS="$Qt5Widgets_LIBS $Qt5PrintSupport_LIBS"
+	    QtGui=Qt5Widgets
+	    Qt5_use=true
+	])
+	AC_SUBST(Qt_MOC)
+	AC_SUBST(Qt_RCC)
+	Qt_MOC="$(pkg-config --variable=moc_location ${QtGui})"
+	Qt_RCC="$(pkg-config --variable=rcc_location ${QtGui})";
+	if test "x${Qt_MOC}" = "x"; then Qt_MOC="$(pkg-config --variable=prefix ${QtGui})/bin/moc"; fi
+	if test "x${Qt_RCC}" = "x"; then Qt_RCC="$(pkg-config --variable=prefix ${QtGui})/bin/rcc"; fi
+	Qt_use=true
     fi
 ])
 
@@ -1425,225 +1436,4 @@ AC_DEFUN([AX_MOD_EN],
     ])
     AM_CONDITIONAL([$1Incl],[test "x$4" = "xincl" -a $enable_$1 = incl])
     AS_IF([test $enable_$1 = yes || test "x$4" = "xincl" -a $enable_$1 = incl], [$5], [$6])
-])
-
-AC_DEFUN([AX_MOD_DB_EN],
-[
-    AC_ARG_ENABLE([$1],AC_HELP_STRING([--$3-$1],[$2]),[ ],[
-	    if test "x$3" = "xdisable"; then
-		if test $enable_AllModuls = no || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=yes; fi
-	    else
-		if test $enable_AllModuls = yes || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=no; fi
-	    fi
-	])
-    if test $enable_AllModuls = dist; then enable_$1=$enable_AllModuls; fi
-    AM_CONDITIONAL([$1Incl],[test "x$4" = "xincl" -a $enable_$1 = incl])
-    AS_IF([test $enable_$1 = yes || test $enable_$1 = dist || test "x$4" = "xincl" -a $enable_$1 = incl],[
-	    AC_MSG_RESULT(Build module: DB.$1)
-	    AC_CONFIG_FILES(src/moduls/bd/$1/Makefile)
-	    DBSub_mod="${DBSub_mod}$1 "
-	    if test $enable_$1 = incl; then
-		LIB_CORE="${LIB_CORE} moduls/bd/$1/bd_$1.la "
-    		ModsIncl="${ModsIncl}bd_$1 "
-	    fi
-	    AS_IF([test $enable_$1 = dist],[$6],[$5])
-	],[$6])
-])
-
-AC_DEFUN([AX_MOD_DAQ_EN],
-[
-    AC_ARG_ENABLE([$1],AC_HELP_STRING([--$3-$1],[$2]),[ ],[
-	    if test "x$3" = "xdisable"; then
-		if test $enable_AllModuls = no || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=yes; fi
-	    else
-		if test $enable_AllModuls = yes || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=no; fi
-	    fi
-	])
-    if test $enable_AllModuls = dist; then enable_$1=$enable_AllModuls; fi
-    AM_CONDITIONAL([$1Incl],[test "x$4" = "xincl" -a $enable_$1 = incl])
-    AS_IF([test $enable_$1 = yes || test $enable_$1 = dist || test "x$4" = "xincl" -a $enable_$1 = incl],[
-	    AC_MSG_RESULT(Build module: DAQ.$1)
-	    AC_CONFIG_FILES(src/moduls/daq/$1/Makefile)
-	    DAQSub_mod="${DAQSub_mod}$1 "
-	    if test $enable_$1 = incl; then
-		LIB_CORE="${LIB_CORE} moduls/daq/$1/daq_$1.la "
-    		ModsIncl="${ModsIncl}daq_$1 "
-	    fi
-	    AS_IF([test $enable_$1 = dist],[$6],[$5])
-	],[$6])
-])
-
-AC_DEFUN([AX_MOD_Archive_EN],
-[
-    AC_ARG_ENABLE([$1],AC_HELP_STRING([--$3-$1],[$2]),[ ],[
-	    if test "x$3" = "xdisable"; then
-		if test $enable_AllModuls = no || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=yes; fi
-	    else
-	        if test $enable_AllModuls = yes || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=no; fi
-	    fi
-	])
-    if test $enable_AllModuls = dist; then enable_$1=$enable_AllModuls; fi
-    AM_CONDITIONAL([$1Incl],[test "x$4" = "xincl" -a $enable_$1 = incl])
-    AS_IF([test $enable_$1 = yes || test $enable_$1 = dist || test "x$4" = "xincl" -a $enable_$1 = incl],[
-	    AC_MSG_RESULT(Build module: Archive.$1)
-	    AC_CONFIG_FILES(src/moduls/arhiv/$1/Makefile)
-	    ArchSub_mod="${ArchSub_mod}$1 "
-	    if test $enable_$1 = incl; then
-		LIB_CORE="${LIB_CORE} moduls/arhiv/$1/arh_$1.la "
-    		ModsIncl="${ModsIncl}arh_$1 "
-	    fi
-	    AS_IF([test $enable_$1 = dist],[$6],[$5])
-	],[$6])
-])
-
-AC_DEFUN([AX_MOD_Transport_EN],
-[
-    AC_ARG_ENABLE([$1],AC_HELP_STRING([--$3-$1],[$2]),[ ],[
-	    if test "x$3" = "xdisable"; then
-		if test $enable_AllModuls = no || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=yes; fi
-	    else
-		if test $enable_AllModuls = yes || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=no; fi
-	    fi
-	])
-    if test $enable_AllModuls = dist; then enable_$1=$enable_AllModuls; fi
-    AM_CONDITIONAL([$1Incl],[test "x$4" = "xincl" -a $enable_$1 = incl])
-    AS_IF([test $enable_$1 = yes || test $enable_$1 = dist || test "x$4" = "xincl" -a $enable_$1 = incl],[
-	    AC_MSG_RESULT(Build module: Transport.$1)
-	    AC_CONFIG_FILES(src/moduls/transport/$1/Makefile)
-	    TranspSub_mod="${TranspSub_mod}$1 "
-	    if test $enable_$1 = incl; then
-		LIB_CORE="${LIB_CORE} moduls/transport/$1/tr_$1.la "
-    		ModsIncl="${ModsIncl}tr_$1 "
-	    fi
-	    AS_IF([test $enable_$1 = dist],[$6],[$5])
-	],[$6])
-])
-
-AC_DEFUN([AX_MOD_TrProt_EN],
-[
-    AC_ARG_ENABLE([$1],AC_HELP_STRING([--$3-$1],[$2]),[ ],[
-	    if test "x$3" = "xdisable"; then
-		if test $enable_AllModuls = no || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=yes; fi
-	    else
-		if test $enable_AllModuls = yes || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=no; fi
-	    fi
-	])
-    if test $enable_AllModuls = dist; then enable_$1=$enable_AllModuls; fi
-    AM_CONDITIONAL([$1Incl],[test "x$4" = "xincl" -a $enable_$1 = incl])
-    AS_IF([test $enable_$1 = yes || test $enable_$1 = dist || test "x$4" = "xincl" -a $enable_$1 = incl],[
-	    AC_MSG_RESULT(Build module: Protocol.$1)
-	    AC_CONFIG_FILES(src/moduls/protocol/$1/Makefile)
-	    ProtSub_mod="${ProtSub_mod}$1 "
-	    if test $enable_$1 = incl; then
-		LIB_CORE="${LIB_CORE} moduls/protocol/$1/prot_$1.la "
-    		ModsIncl="${ModsIncl}prot_$1 "
-	    fi
-	    AS_IF([test $enable_$1 = dist],[$6],[$5])
-	],[$6])
-])
-
-AC_DEFUN([AX_MOD_UI_EN],
-[
-    AC_ARG_ENABLE([$1],AC_HELP_STRING([--$3-$1],[$2]),[ ],[
-	    if test "x$3" = "xdisable"; then
-		if test $enable_AllModuls = no || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=yes; fi
-	    else
-		if test $enable_AllModuls = yes || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=no; fi
-	    fi
-	])
-    if test $enable_AllModuls = dist; then enable_$1=$enable_AllModuls; fi
-    AM_CONDITIONAL([$1Incl],[test "x$4" = "xincl" -a $enable_$1 = incl])
-    AS_IF([test $enable_$1 = yes || test $enable_$1 = dist || test "x$4" = "xincl" -a $enable_$1 = incl],[
-	    AC_MSG_RESULT(Build module: UI.$1)
-	    AC_CONFIG_FILES(src/moduls/ui/$1/Makefile)
-	    UISub_mod="${UISub_mod}$1 "
-	    if test $enable_$1 = incl; then
-		LIB_CORE="${LIB_CORE} moduls/ui/$1/ui_$1.la "
-    		ModsIncl="${ModsIncl}ui_$1 "
-	    fi
-	    AS_IF([test $enable_$1 = dist],[$6],[$5])
-	],[$6])
-])
-
-AC_DEFUN([AX_MOD_Special_EN],
-[
-    AC_ARG_ENABLE([$1],AC_HELP_STRING([--$3-$1],[$2]),[ ],[
-	    if test "x$3" = "xdisable"; then
-		if test $enable_AllModuls = no || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=yes; fi
-	    else
-		if test $enable_AllModuls = yes || test "x$4" = "xincl" -a $enable_AllModuls = incl; then enable_$1=$enable_AllModuls;
-		else enable_$1=no; fi
-	    fi
-	])
-    if test $enable_AllModuls = dist; then enable_$1=$enable_AllModuls; fi
-    AM_CONDITIONAL([$1Incl],[test "x$4" = "xincl" -a $enable_$1 = incl])
-    AS_IF([test $enable_$1 = yes || test $enable_$1 = dist || test "x$4" = "xincl" -a $enable_$1 = incl],[
-	    AC_MSG_RESULT(Build module: Special.$1)
-	    AC_CONFIG_FILES(src/moduls/special/$1/Makefile)
-	    SpecSub_mod="${SpecSub_mod}$1 "
-	    if test $enable_$1 = incl; then
-		LIB_CORE="${LIB_CORE} moduls/special/$1/spec_$1.la "
-    		ModsIncl="${ModsIncl}spec_$1 "
-	    fi
-	    AS_IF([test $enable_$1 = dist],[$6],[$5])
-	],[$6])
-])
-
-# ===========================================================================
-#       http://www.gnu.org/software/autoconf-archive/ax_define_dir.html
-# ===========================================================================
-#
-# SYNOPSIS
-#
-#   AX_DEFINE_DIR(VARNAME, DIR [, DESCRIPTION])
-#
-# DESCRIPTION
-#
-#   This macro sets VARNAME to the expansion of the DIR variable, taking
-#   care of fixing up ${prefix} and such.
-#
-#   VARNAME is then offered as both an output variable and a C preprocessor
-#   symbol.
-#
-#   Example:
-#
-#     AX_DEFINE_DIR([DATADIR], [datadir], [Where data are placed to.])
-#
-# LICENSE
-#
-#   Copyright (c) 2008 Stepan Kasal <kasal@ucw.cz>
-#   Copyright (c) 2008 Andreas Schwab <schwab@suse.de>
-#   Copyright (c) 2008 Guido U. Draheim <guidod@gmx.de>
-#   Copyright (c) 2008 Alexandre Oliva
-#
-#   Copying and distribution of this file, with or without modification, are
-#   permitted in any medium without royalty provided the copyright notice
-#   and this notice are preserved. This file is offered as-is, without any
-#   warranty.
-AC_DEFUN([AX_DEFINE_DIR], [
-  prefix_NONE=
-  exec_prefix_NONE=
-  test "x$prefix" = xNONE && prefix_NONE=yes && prefix=$ac_default_prefix
-  test "x$exec_prefix" = xNONE && exec_prefix_NONE=yes && exec_prefix=$prefix
-dnl In Autoconf 2.60, ${datadir} refers to ${datarootdir}, which in turn
-dnl refers to ${prefix}.  Thus we have to use `eval' twice.
-  eval ax_define_dir="\"[$]$2\""
-  eval ax_define_dir="\"$ax_define_dir\""
-  AC_SUBST($1, "$ax_define_dir")
-  AC_DEFINE_UNQUOTED($1, "$ax_define_dir", [$3])
-  test "$prefix_NONE" && prefix=NONE
-  test "$exec_prefix_NONE" && exec_prefix=NONE
 ])

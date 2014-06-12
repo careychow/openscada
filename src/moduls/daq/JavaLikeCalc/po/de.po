@@ -79,12 +79,8 @@ msgstr "Object-Funktion haben mehr 255 Parameter."
 msgid "Get object from no object's register"
 msgstr "Lade Objekt nicht vom Objektregister"
 
-msgid "Function execution terminated by error"
-msgstr "Funktion Ausführung abgebrochen durch Fehler"
-
-#, c-format
-msgid "Timeouted function calculation %d > %d+%d"
-msgstr "Zeitüberschreitung Berechnung der Funktion %d > %d+%d"
+msgid "Timeouted function calculation"
+msgstr "Zeitüberschreitung Berechnung der Funktion."
 
 msgid "Not supported type for operation 'Add'."
 msgstr "Typ wird nicht unterstützt für Operation 'Add' (Hinzufügen)."
@@ -98,9 +94,6 @@ msgstr "Fehler bei der Operation %c(%xh). Funktion '%s' ist angehalten."
 
 msgid "Function: "
 msgstr "Funktion: "
-
-msgid "Date of modification"
-msgstr "Änderungsdatum"
 
 msgid "Name"
 msgstr "Name"
@@ -123,8 +116,8 @@ msgstr ""
 msgid "Type"
 msgstr "Typ"
 
-msgid "Real;Integer;Boolean;String;Text;Object"
-msgstr "Reellezahl;Ganzzahl;Logisch;Saite;Text;Objekt"
+msgid "Real;Integer;Boolean;String;Object"
+msgstr "Reellezahl;Ganzzahl;Logisch;Text;Objekt"
 
 msgid "Mode"
 msgstr "Mode"
@@ -304,11 +297,8 @@ msgstr "Berechnungen"
 msgid "Data"
 msgstr "Daten"
 
-msgid "Attribute mode"
-msgstr "Modusattribut"
-
-msgid "Read only;Read and Write;Read and Write"
-msgstr "Read-only;Lesen und Schreiben;Lesen und Schreiben"
+msgid "String;Integer;Real;Boolean;Object"
+msgstr "Text;Ganzzahl;Reellezahl;Logisch;Objekt"
 
 msgid "Value"
 msgstr "Wert"

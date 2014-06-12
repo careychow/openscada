@@ -102,8 +102,7 @@ class LibProjProp: public QDialog
 			*obj_accgrp,	//Group access
 			*obj_accother,	//Other access
 			*prj_runw;	//Project's run window mode
-	QLabel		*obj_id,	//Id
-			*obj_tmstmp;	//TimeStamp
+	QLabel		*obj_id;	//Id
 	LineEdit	*obj_name,	//Name
 			*prj_ctm;	//Calc time of project
 	TextEdit	*obj_descr;	//Description
@@ -180,8 +179,7 @@ class VisItProp : public QDialog
 	QTabWidget	*wdg_tabs;	//Tabs
 	QLabel		*obj_id,	//Id
 			*obj_root,	//Root
-			*obj_path,	//Path
-			*obj_tmstmp;	//TimeStamp
+			*obj_path;	//Path
 	QPushButton	*obj_ico;	//Icon
 	QCheckBox	*obj_enable;	//Enabled stat
 	QComboBox	*obj_parent,	//Parent widget

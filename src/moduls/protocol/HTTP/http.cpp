@@ -397,7 +397,7 @@ void TProt::cntrCmdProc( XMLNode *opt )
 	    if(idcol == "user")	mALog[idrow].user = opt->text();
 	}
     }
-    else if(a_path == "/prm/tmpl")
+    if(a_path == "/prm/tmpl")
     {
 	if(ctrChkNode(opt,"get",RWRWR_,"root",SPRT_ID,SEC_RD))	opt->setText(tmpl());
 	if(ctrChkNode(opt,"set",RWRWR_,"root",SPRT_ID,SEC_WR))	setTmpl(opt->text());
@@ -459,8 +459,9 @@ bool TProtIn::mess( const string &reqst, string &answer, const string &sender )
     if( request.size() > 0 )
     {
 	int	pos = 0;
-	if(mess_lev() == TMess::Debug)
-	    mess_debug(nodePath().c_str(), _("Content: %d:\n%s"), request.size(), request.c_str());
+#if OSC_DEBUG >= 3
+	mess_debug(nodePath().c_str(),_("Content: %d:\n%s"),request.size(),request.c_str());
+#endif
 
 	//> Parse first record
 	req = TSYS::strLine(request,0,&pos);
@@ -602,7 +603,9 @@ bool TProtIn::mess( const string &reqst, string &answer, const string &sender )
 		    (void (TModule::**)()) &HttpGet);
 
 		((&wwwmod.at())->*HttpGet)(url,answer,sender,vars,user);
-		if(mess_lev() == TMess::Debug) mess_debug(nodePath().c_str(), "Get Content:\n%s", request.c_str());
+#if OSC_DEBUG >= 4
+		mess_debug(nodePath().c_str(),"Get Content:\n%s",request.c_str());
+#endif
 	    }
 	    else if( method == "POST" )
 	    {
@@ -612,7 +615,9 @@ bool TProtIn::mess( const string &reqst, string &answer, const string &sender )
 
 		answer = request.substr(pos);
 		((&wwwmod.at())->*HttpPost)(url,answer,sender,vars,user);
-		if(mess_lev() == TMess::Debug) mess_debug(nodePath().c_str(), "Post Content:\n%s", request.c_str());
+#if OSC_DEBUG >= 4
+		mess_debug(nodePath().c_str(),"Post Content:\n%s",request.c_str());
+#endif
 	    }
 	    else
 	    {

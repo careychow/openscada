@@ -75,7 +75,6 @@ class UserPg : public TCntrNode, public TConfig
 	string	progLang( );
 	string	prog( );
 	string	workProg( )	{ return mWorkProg; }
-	int	timeStamp( )	{ return mTimeStamp; }
 
 	string	getStatus( );
 
@@ -115,7 +114,6 @@ class UserPg : public TCntrNode, public TConfig
 	//Attributes
 	TCfg	&mId;
 	char	&mAEn, mEn;
-	int	&mTimeStamp;
 	string	mDB, mWorkProg;
 };
 

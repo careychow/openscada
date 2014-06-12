@@ -1,8 +1,7 @@
 
 //OpenSCADA system module DAQ.ICP_DAS file: ICP_module.h
 /***************************************************************************
- *   Copyright (C) 2010-2012 by Roman Savochenko                           *
- *   rom_as@oscada.org, rom_as@fromru.com                                  *
+ *   Copyright (C) 2010 by Roman Savochenko                                *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -57,25 +56,18 @@ class TMdPrm : public TParamContr
 	void disable( );
 
 	void getVals( );
-	string modPrm( const string &prm, const string &def = "" );
 
-	void setModPrm( const string &prm, const string &val );
+	void loadExtPrms( );
+	void saveExtPrms( );
 
 	TElem &elem( )		{ return p_el; }
 	TMdContr &owner( );
 
 	//Attributes
 	TElem	p_el;		//Work atribute elements
-	void	*extPrms;
-	TCfg	&modTp;		//I-7000,I-8000 module type
+	int	&modTp;		//I-7000,I-8000 module type
 	int	&modAddr;	//I-7000,I-8000 module address
 	int	&modSlot;	//I-8000 module slot
-
-	ResString	acq_err;
-
-	bool	endRunReq, prcSt;
-	uint32_t dInOutRev[10];	//Up to 10 channels with 32 io each
-	float	wTm;
 
     protected:
 	//Methods
@@ -83,16 +75,35 @@ class TMdPrm : public TParamContr
 	bool cfgChange( TCfg &cfg );
 
     private:
+	//Data
+	class PrmsI8017
+	{
+	    public:
+		PrmsI8017( ) : init(false), prmNum(8), fastPer(0)
+		{ for( int ip = 0; ip < 8; ip++ ) cnlMode[ip] = 0; }
+
+		bool	init;
+		char	prmNum;
+		float	fastPer;
+		char	cnlMode[8];
+	};
+
 	//Methods
 	void postEnable( int flag );
 	void vlGet( TVal &val );
 	void vlSet( TVal &val, const TVariant &pvl );
 	void vlArchMake( TVal &val );
 
-	//Attributes
-	int	clcCnt;
+	static void *fastTask( void *iprm );
 
-	DA	*da;
+	//Attributes
+	bool		endRunReq, prcSt;
+	int		clcCnt;
+	ResString	acq_err;
+
+	void	*extPrms;
+	float	wTm;
+	int	dOutRev, dInRev;
 };
 
 //******************************************************
@@ -108,10 +119,8 @@ class TMdContr: public TController
 
 	string getStatus( );
 
-	int64_t period( )       { return mPer; }
-        string  cron( )         { return mSched; }
+	double period( )	{ return mPer; }
 	int    prior( )		{ return mPrior; }
-	int    bus( ) 		{ return mBus; }
 	string prmLP( const string &prm );
 
 	AutoHD<TMdPrm> at( const string &nm )	{ return TController::at(nm); }
@@ -120,8 +129,6 @@ class TMdContr: public TController
 	void setPrmLP( const string &prm, const string &vl );
 
 	string serReq( string req, char mSlot = 0 );
-
-	Res	reqRes, pBusRes;	//Resource for request values and parallel bus devices
 
     protected:
 	//Methods
@@ -137,13 +144,12 @@ class TMdContr: public TController
 	static void *Task( void *icntr );
 
 	//Attributes
-	Res	en_res;				//Resource for enable params
+	Res	en_res, reqRes, pBusRes;	//Resource for enable params, request values and parallel bus devices
+	double	&mPer;				//Acquisition task (seconds)
 	int	&mPrior,			//Process task priority
 		&mBus,				//Serial port address: 0-COM1(LP), 1-COM1, 2-COM2, ...
 		&mBaud,				//Baudrate
 		&connTry;			//Connections try
-	TCfg    &mSched;                        //Calc schedule
-	int64_t mPer;
 
 	bool	prcSt,				//Process task active
 		call_st,        		//Calc now stat
@@ -153,6 +159,8 @@ class TMdContr: public TController
 	double	tm_gath;			//Gathering time
 	int	mCurSlot;
 	float	numReq, numErr, numErrResp;
+
+	//AutoHD<TTransportOut> tr;
 };
 
 //*************************************************
@@ -165,10 +173,6 @@ class TTpContr: public TTipDAQ
 	TTpContr( string name );
 	~TTpContr( );
 
-        void    daReg( DA *da );
-	void    daTpList( TMdPrm *prm, vector<string> &tpl, vector<string> *ntpl = NULL );
-        DA      *daGet( TMdPrm *prm );
-
     protected:
 	//Methods
 	void load_( );
@@ -180,9 +184,6 @@ class TTpContr: public TTipDAQ
 	//Methods
 	void postEnable( int flag );
 	TController *ContrAttach( const string &name, const string &daq_db );
-
-	//Attributes
-        vector<DA *> m_da;
 };
 
 extern TTpContr *mod;

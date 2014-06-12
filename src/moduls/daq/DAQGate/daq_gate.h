@@ -95,8 +95,8 @@ class TMdPrm : public TParamContr
 	//Methods
 	void postEnable( int flag );
 	TVal* vlNew( );
-	void vlGet( TVal &val );
-	void vlSet( TVal &val, const TVariant &pvl );
+	void vlGet( TVal &vo );
+	void vlSet( TVal &vo, const TVariant &vl, const TVariant &pvl );
 	void vlArchMake( TVal &val );
 
 	//Attributes
@@ -114,15 +114,13 @@ class TMdContr: public TController
 	TMdContr( string name_c, const string &daq_db, ::TElem *cfgelem );
 	~TMdContr( );
 
-	string getStatus( );
+	string	getStatus( );
 
 	double	period( )	{ return mPer; }
 	string	cron( )		{ return mSched; }
 	int	prior( )	{ return mPrior; }
 	double	syncPer( )	{ return mSync; }
 	double	restDtTm( )	{ return mRestDtTm; }
-
-	string	catsPat( );
 
 	AutoHD<TMdPrm> at( const string &nm )	{ return TController::at(nm); }
 
@@ -140,23 +138,13 @@ class TMdContr: public TController
 	bool cfgChange( TCfg &cfg );
 
     private:
-	//Data
-	class StHd
-	{
-	    public:
-	    StHd( ) { cntr = 0; lstMess.clear(); }
-	    float cntr;
-	    map<string, time_t> lstMess;
-	};
-
 	//Methods
 	TParamContr *ParamAttach( const string &name, int type );
 	static void *Task( void *icntr );
 
 	//Attributes
 	Res	enRes;				//Resource for enable params and request to remote OpenSCADA station
-	TCfg	&mSched,			//Calc schedule
-		&mMessLev;			//Messages level for gather
+	TCfg	&mSched;			//Calc schedule
 	double	&mSync,				//Synchronization inter remote OpenSCADA station:
 						//configuration update, attributes list update, local and remote archives sync.
 		&mRestDtTm;			//Restore data maximum length time (hour)
@@ -165,9 +153,10 @@ class TMdContr: public TController
 		&mPrior;			//Process task priority
 
 	bool	prcSt,				//Process task active
-		call_st,        		//Calc now stat
+		call_st,			//Calc now stat
 		endrunReq;			//Request to stop of the Process task
-	vector< pair<string,StHd> > mStatWork;	//Work stations and it status
+	int8_t	alSt;				//Alarm state
+	vector< pair<string,float> > mStatWork;	//Work stations and it status
 
 	double	mPer, tmGath;			//Gathering time
 };

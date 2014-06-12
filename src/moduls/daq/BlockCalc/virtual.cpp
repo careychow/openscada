@@ -110,32 +110,33 @@ void TipContr::postEnable( int flag )
     TTipDAQ::postEnable( flag );
 
     //Controllers BD structure
-    fldAdd( new TFld("PRM_BD",_("Parameters table"),TFld::String,TFld::NoFlag,"30","system") );
-    fldAdd( new TFld("BLOCK_SH",_("Block's table"),TFld::String,TFld::NoFlag,"30","block") );
-    fldAdd( new TFld("PERIOD",_("Calculate period (ms)"),TFld::Integer,TFld::NoFlag,"5","0","0;10000") );	//!!!! Remove at further
-    fldAdd( new TFld("SCHEDULE",_("Calculate schedule"),TFld::String,TFld::NoFlag,"100","1") );
-    fldAdd( new TFld("PRIOR",_("Calculate task priority"),TFld::Integer,TFld::NoFlag,"2","0","-1;99") );
-    fldAdd( new TFld("ITER",_("Iteration number into calculate period"),TFld::Integer,TFld::NoFlag,"2","1","0;99") );
+    fldAdd(new TFld("PRM_BD",_("Parameters table"),TFld::String,TFld::NoFlag,"30","system"));
+    fldAdd(new TFld("BLOCK_SH",_("Block's table"),TFld::String,TFld::NoFlag,"30","block"));
+    fldAdd(new TFld("PERIOD",_("Calculate period (ms)"),TFld::Integer,TFld::NoFlag,"5","0","0;10000"));	//!!!! Remove at further
+    fldAdd(new TFld("SCHEDULE",_("Calculate schedule"),TFld::String,TFld::NoFlag,"100","1"));
+    fldAdd(new TFld("PRIOR",_("Calculate task priority"),TFld::Integer,TFld::NoFlag,"2","0","-1;99"));
+    fldAdd(new TFld("ITER",_("Iteration number into calculate period"),TFld::Integer,TFld::NoFlag,"2","1","0;99"));
 
     //Add parameter types
     int t_prm = tpParmAdd("std","PRM_BD",_("Standard"));
-    tpPrmAt(t_prm).fldAdd( new TFld("IO",_("Blocks' IOs"),TFld::String,TFld::FullText|TCfg::TransltText|TCfg::NoVal,"1000") );
+    tpPrmAt(t_prm).fldAdd(new TFld("IO",_("Blocks' IOs"),TFld::String,TFld::FullText|TCfg::TransltText|TCfg::NoVal,"1000"));
 
     //Blok's db structure
-    blk_el.fldAdd( new TFld("ID",_("ID"),TFld::String,TCfg::Key,"20") );
-    blk_el.fldAdd( new TFld("NAME",_("Name"),TFld::String,TCfg::TransltText,"50") );
-    blk_el.fldAdd( new TFld("DESCR",_("Description"),TFld::String,TCfg::TransltText,"300") );
-    blk_el.fldAdd( new TFld("FUNC",_("Function"),TFld::String,TFld::NoFlag,"75") );
-    blk_el.fldAdd( new TFld("EN",_("To enable"),TFld::Boolean,TFld::NoFlag,"1","0") );
-    blk_el.fldAdd( new TFld("PROC",_("To process"),TFld::Boolean,TFld::NoFlag,"1","0") );
-    blk_el.fldAdd( new TFld("PRIOR",_("Prior block"),TFld::String,TFld::NoFlag,"200") );
+    blk_el.fldAdd(new TFld("ID",_("ID"),TFld::String,TCfg::Key,OBJ_ID_SZ));
+    blk_el.fldAdd(new TFld("NAME",_("Name"),TFld::String,TCfg::TransltText,OBJ_NM_SZ));
+    blk_el.fldAdd(new TFld("DESCR",_("Description"),TFld::String,TCfg::TransltText,"300"));
+    blk_el.fldAdd(new TFld("FUNC",_("Function"),TFld::String,TFld::NoFlag,"75"));
+    blk_el.fldAdd(new TFld("EN",_("To enable"),TFld::Boolean,TFld::NoFlag,"1","0"));
+    blk_el.fldAdd(new TFld("PROC",_("To process"),TFld::Boolean,TFld::NoFlag,"1","0"));
+    blk_el.fldAdd(new TFld("PRIOR",_("Prior block"),TFld::String,TFld::NoFlag,"200"));
+    blk_el.fldAdd(new TFld("LNK_OUT_WR_CH",_("Write to output links only at changes"),TFld::Boolean,TFld::NoFlag,"1","0"));
 
     //IO blok's db structure
-    blkio_el.fldAdd( new TFld("BLK_ID",_("Block's ID"),TFld::String,TCfg::Key,"20") );
-    blkio_el.fldAdd( new TFld("ID",_("IO ID"),TFld::String,TCfg::Key,"20") );
-    blkio_el.fldAdd( new TFld("TLNK",_("Link's type"),TFld::Integer,TFld::NoFlag,"2") );
-    blkio_el.fldAdd( new TFld("LNK",_("Link"),TFld::String,TFld::NoFlag,"50") );
-    blkio_el.fldAdd( new TFld("VAL",_("Link's value"),TFld::String,TFld::NoFlag,"20") );
+    blkio_el.fldAdd(new TFld("BLK_ID",_("Block's ID"),TFld::String,TCfg::Key,OBJ_ID_SZ));
+    blkio_el.fldAdd(new TFld("ID",_("IO ID"),TFld::String,TCfg::Key,OBJ_ID_SZ));
+    blkio_el.fldAdd(new TFld("TLNK",_("Link's type"),TFld::Integer,TFld::NoFlag,"2"));
+    blkio_el.fldAdd(new TFld("LNK",_("Link"),TFld::String,TFld::NoFlag,"100"));
+    blkio_el.fldAdd(new TFld("VAL",_("Link's value"),TFld::String,TFld::NoFlag,"10000"));
 }
 
 void TipContr::preDisable(int flag)
@@ -161,7 +162,7 @@ TController *TipContr::ContrAttach( const string &name, const string &daq_db )
 Contr::Contr( string name_c, const string &daq_db, ::TElem *cfgelem) :
     ::TController(name_c, daq_db, cfgelem), prc_st(false), call_st(false), endrun_req(false), sync_st(false),
     mPerOld(cfg("PERIOD").getId()), mPrior(cfg("PRIOR").getId()), mIter(cfg("ITER").getId()),
-    mPer(1e9)
+    mPer(1e9), tm_calc(0)
 {
     cfg("PRM_BD").setS("BlckCalcPrm_"+name_c);
     cfg("BLOCK_SH").setS("BlckCalcBlcks_"+name_c);
@@ -205,19 +206,19 @@ string Contr::getStatus( )
     if(startStat() && !redntUse())
     {
 	if(call_st)	rez += TSYS::strMess(_("Call now. "));
-	if(period())	rez += TSYS::strMess(_("Call by period: %s. "),TSYS::time2str(1e-3*period()).c_str());
-        else rez += TSYS::strMess(_("Call next by cron '%s'. "),TSYS::time2str(TSYS::cron(cron()),"%d-%m-%Y %R").c_str());
-	rez += TSYS::strMess(_("Spent time: %s. "),TSYS::time2str(SYS->taskUtilizTm(nodePath('.',true))).c_str());
+	if(period())	rez += TSYS::strMess(_("Call by period: %s. "), tm2s(1e-3*period()).c_str());
+	else rez += TSYS::strMess(_("Call next by cron '%s'. "), tm2s(TSYS::cron(cron()),"%d-%m-%Y %R").c_str());
+	rez += TSYS::strMess(_("Spent time: %s. "), tm2s(tm_calc).c_str());
     }
     return rez;
 }
 
 void Contr::postDisable(int flag)
 {
-    if( run_st ) stop();
+    if(run_st) stop();
     try
     {
-	if( flag )
+	if(flag)
 	{
 	    //Delete parameter's tables
 	    string wbd = DB()+"."+cfg("BLOCK_SH").getS();
@@ -228,8 +229,8 @@ void Contr::postDisable(int flag)
 	    SYS->db().at().open(wbd);
 	    SYS->db().at().close(wbd,true);
 	}
-    }catch(TError err)
-    { mess_err(nodePath().c_str(),"%s",err.mess.c_str()); }
+    }
+    catch(TError err) { mess_err(nodePath().c_str(),"%s",err.mess.c_str()); }
 
     TController::postDisable(flag);
 }
@@ -370,18 +371,18 @@ void *Contr::Task( void *icontr )
 
     bool is_start = true;
     bool is_stop  = false;
-    int64_t t_cnt, t_prev = TSYS::curTime();
+    int64_t t_cnt = 0, t_prev = TSYS::curTime();
 
     while(true)
     {
 	//Check calk time
 	cntr.call_st = true;
-	if(!cntr.period()) t_cnt = TSYS::curTime();
+	t_cnt = TSYS::curTime();
 
 	cntr.hd_res.resRequestR( );
 	ResAlloc sres(cntr.calcRes,true);
 	for(unsigned i_it = 0; (int)i_it < cntr.mIter && !cntr.redntUse(); i_it++)
-	    for(unsigned i_blk = 0; i_blk < cntr.clc_blks.size(); i_blk++)
+	    for( unsigned i_blk = 0; i_blk < cntr.clc_blks.size(); i_blk++ )
 	    {
 		try{ cntr.clc_blks[i_blk].at().calc(is_start, is_stop, cntr.period()?((1e9*(double)cntr.iterate())/cntr.period()):(-1e-6*(t_cnt-t_prev))); }
 		catch(TError err)
@@ -400,6 +401,7 @@ void *Contr::Task( void *icontr )
 	cntr.hd_res.resRelease( );
 
 	t_prev = t_cnt;
+	cntr.tm_calc = TSYS::curTime()-t_cnt;
 	cntr.call_st = false;
 
 	if(is_stop) break;
@@ -472,15 +474,16 @@ void Contr::cntrCmdProc( XMLNode *opt )
     if(opt->name() == "info")
     {
 	TController::cntrCmdProc(opt);
-	ctrMkNode("grp",opt,-1,"/br/blk_",_("Block"),RWRWR_,"root",SDAQ_ID,2,"idm","1","idSz","20");
-        ctrRemoveNode(opt,"/cntr/cfg/PERIOD");
+	ctrMkNode("grp",opt,-1,"/br/blk_",_("Block"),RWRWR_,"root",SDAQ_ID,2,"idm",OBJ_NM_SZ,"idSz",OBJ_ID_SZ);
+	ctrRemoveNode(opt,"/cntr/cfg/PERIOD");
 	ctrMkNode("fld",opt,-1,"/cntr/cfg/SCHEDULE",cfg("SCHEDULE").fld().descr(),startStat()?R_R_R_:RWRWR_,"root",SDAQ_ID,4,
-            "tp","str","dest","sel_ed","sel_list",TMess::labSecCRONsel(),"help",TMess::labSecCRON());
+	    "tp","str","dest","sel_ed","sel_list",TMess::labSecCRONsel(),"help",TMess::labSecCRON());
 	ctrMkNode("fld",opt,-1,"/cntr/cfg/PRIOR",cfg("PRIOR").fld().descr(),startStat()?R_R_R_:RWRWR_,"root",SDAQ_ID,1,"help",TMess::labTaskPrior());
 	if(ctrMkNode("area",opt,-1,"/scheme",_("Blocks scheme")))
 	{
 	    ctrMkNode("fld",opt,-1,"/scheme/nmb",_("Number"),R_R_R_,"root",SDAQ_ID,1,"tp","str");
-	    ctrMkNode("list",opt,-1,"/scheme/sch",_("Blocks"),RWRWR_,"root",SDAQ_ID,5,"tp","br","idm","1","s_com","add,del","br_pref","blk_","idSz","20");
+	    ctrMkNode("list",opt,-1,"/scheme/sch",_("Blocks"),RWRWR_,"root",SDAQ_ID,5,
+		"tp","br","idm",OBJ_NM_SZ,"s_com","add,del","br_pref","blk_","idSz",OBJ_ID_SZ);
 	}
 	return;
     }
@@ -567,7 +570,7 @@ Contr &Prm::owner( )	{ return (Contr&)TParamContr::owner( ); }
 
 void Prm::enable()
 {
-    if( enableStat() )  return;
+    if(enableStat())	return;
     string ioLs = cfg("IO").getS();
 
     //> Check and delete no used fields
@@ -668,16 +671,16 @@ void Prm::disable()
     TParamContr::disable();
 }
 
-void Prm::vlSet( TVal &val, const TVariant &pvl )
+void Prm::vlSet( TVal &vo, const TVariant &vl, const TVariant &pvl )
 {
     if(!enableStat() || !owner().startStat())	return;
 
     //> Send to active reserve station
-    if( owner().redntUse( ) )
+    if(owner().redntUse())
     {
-	if( val.getS(0,true) == pvl.getS() ) return;
+	if(vl == pvl) return;
 	XMLNode req("set");
-	req.setAttr("path",nodePath(0,true)+"/%2fserv%2fattr")->childAdd("el")->setAttr("id",val.name())->setText(val.getS(0,true));
+	req.setAttr("path",nodePath(0,true)+"/%2fserv%2fattr")->childAdd("el")->setAttr("id",vo.name())->setText(vl.getS());
 	SYS->daq().at().rdStRequest(owner().workId(),req);
 	return;
     }
@@ -685,28 +688,28 @@ void Prm::vlSet( TVal &val, const TVariant &pvl )
     //> Direct write
     try
     {
-	AutoHD<Block> blk = ((Contr &)owner()).blkAt(TSYS::strSepParse(val.fld().reserve(),0,'.'));
-	int io_id = blk.at().ioId(TSYS::strSepParse(val.fld().reserve(),1,'.'));
+	AutoHD<Block> blk = ((Contr &)owner()).blkAt(TSYS::strSepParse(vo.fld().reserve(),0,'.'));
+	int io_id = blk.at().ioId(TSYS::strSepParse(vo.fld().reserve(),1,'.'));
 	if( io_id < 0 ) disable();
 	else
 	{
 	    ResAlloc sres(owner().calcRes,true);
-	    blk.at().set(io_id,val.get(0,true));
+	    blk.at().set(io_id, vl);
 	}
     }catch(TError err) { disable(); }
 }
 
 void Prm::vlGet( TVal &val )
 {
-    if( val.name() == "err" )
+    if(val.name() == "err")
     {
-	if( !enableStat() ) val.setS(_("1:Parameter is disabled."),0,true);
-	else if( !owner().startStat( ) ) val.setS(_("2:Controller is stopped."),0,true);
+	if(!enableStat()) val.setS(_("1:Parameter is disabled."),0,true);
+	else if(!owner().startStat()) val.setS(_("2:Controller is stopped."),0,true);
 	else val.setS("0",0,true);
 	return;
     }
 
-    if( owner().redntUse( ) ) return;
+    if(owner().redntUse()) return;
 
     try
     {

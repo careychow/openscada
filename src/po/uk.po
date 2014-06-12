@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OpenSCADA 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-09-11 15:46+0300\n"
+"POT-Creation-Date: 2013-10-24 19:13+0300\n"
 "PO-Revision-Date: 2004-10-05 19:25+0300\n"
 "Last-Translator: Roman Savochenko <rom_as@fromru.com>\n"
 "Language-Team: <uk@li.org>\n"
@@ -57,17 +57,8 @@ msgstr "Період архівування (сек)"
 msgid "Source mode"
 msgstr "Режим джерела"
 
-msgid "Passive;Passive param. attribute;Active param. attribute"
-msgstr "Пасивний;Пасивний атрибут параметру;Активний атрибут параметру"
-
 msgid "Source"
 msgstr "Джерело"
-
-msgid "Data combining mode"
-msgstr "Режим поєднання даних"
-
-msgid "Moving average;Single;Minimum;Maximum"
-msgstr "Ковзне середне;Один;Мінімум;Максимум"
 
 msgid "Value type"
 msgstr "Тип значення"
@@ -453,6 +444,15 @@ msgstr "Реальний"
 msgid "String"
 msgstr "Рядок"
 
+msgid "Passive"
+msgstr "Пасивний"
+
+msgid "Passive param. attribute"
+msgstr "Пасивний атрибут параметру"
+
+msgid "Active param. attribute"
+msgstr "Активний атрибут параметру"
+
 msgid "Value archivator: "
 msgstr "Архіватор значень: "
 
@@ -786,17 +786,6 @@ msgstr "Параметри"
 msgid "To add parameters"
 msgstr "Додавати параметри"
 
-msgid "Diagnostics"
-msgstr "Діагностика"
-
-msgid ""
-"Get messages for level more and equal it.\n"
-"Also affect to specific-diagnostic messages generation by data source."
-msgstr ""
-"Отримання повідомлень з рівнем більш або дорівнює вказаному.\n"
-"Також впливає на генерацію джерелом даних специфічних-діагностичних "
-"повідомлень."
-
 msgid "Data acquisition"
 msgstr "Збір даних"
 
@@ -805,9 +794,6 @@ msgstr "Максимальний час обрахунку (сек)"
 
 msgid "Template program"
 msgstr "Програма шаблону"
-
-msgid "Date of modification"
-msgstr "Дата модифікації"
 
 msgid "Template ID"
 msgstr "ID шаблону"
@@ -820,6 +806,9 @@ msgstr "Реальна позиція"
 
 msgid "Error"
 msgstr "Помилка"
+
+msgid "=== Attributes ==="
+msgstr "=== Атрибути ==="
 
 msgid "Load template's libraries error."
 msgstr "Помилка завантаження бібліотек шаблонів."
@@ -851,10 +840,19 @@ msgstr "Помилка вимкнення контролеру '%s'."
 msgid "No parameter present '%s'."
 msgstr "Відсутній параметр '%s'."
 
+#: tdaqs.cpp:470
+msgid "Pointed node is not parameter '%s'."
+msgstr "Вказаний вузол не параметр '%s'."
+
 #, c-format
 msgid "No attribute present '%s'."
 msgstr "Відсутній атрибут '%s'."
 
+#, c-format
+msgid "Pointed node is not attribute '%s'."
+msgstr "Вказаний вузол не атрибут '%s'."
+
+#: tdaqs.cpp:673
 #, c-format
 msgid ""
 "=================== Subsystem \"Data acquisition\" options ================\n"
@@ -1590,7 +1588,6 @@ msgid ""
 "IcoDir     <path>\tIcons directory.\n"
 "ModDir     <path>\tModules directory.\n"
 "MessLev    <level>     Messages <level> (0-7).\n"
-"SelDebCats <list>\tDebug categories list (separated by ';').\n"
 "LogTarget  <direction> Direct messages to:\n"
 "                           <direct> & 1 - syslogd;\n"
 "                           <direct> & 2 - stdout;\n"
@@ -1631,7 +1628,6 @@ msgstr ""
 "IcoDir     <path>      Директорія іконок.\n"
 "ModDir     <path>      Директорія модулів.\n"
 "MessLev    <рівень>    Оброблюваний <рівень> повідомлень (0-7).\n"
-"SelDebCats <перелік>\tПерелік категорій налагодження (поділено ';').\n"
 "LogTarget  <напрямок>  Спрямування повідомлень до:\n"
 "                         <напрямок> & 1 - системний логер (syslogd);\n"
 "                         <напрямок> & 2 - стандартний вихід (stdout);\n"
@@ -1648,6 +1644,10 @@ msgstr ""
 #, c-format
 msgid "Config-file '%s' error: %s"
 msgstr "Помилка конфігураційного файлу '%s': %s"
+
+#, c-format
+msgid "Config-file '%s' load error."
+msgstr "Помилка завантаження конфігураційного файлу '%s'."
 
 #, c-format
 msgid ""
@@ -1729,13 +1729,11 @@ msgstr "Очікування повідомлення..."
 msgid "Task '%s' is already present!"
 msgstr "Завдання '%s' вже присутнє!"
 
-#, c-format
 msgid ""
 "No permission for create real-time policy for '%s'. Default thread is "
 "created!"
 msgstr ""
-"Немає доступу для створення політики реального часу для '%s'. Створено "
-"звичайну нитку!"
+"Немає доступу для створення політики реального часу для '%s'. Створено звичайну нитку!"
 
 #, c-format
 msgid "Task creation error %d."
@@ -1795,9 +1793,6 @@ msgstr "Робоча директорія"
 
 msgid "Icons directory"
 msgstr "Директорія іконок"
-
-msgid "Separate directory paths with icons by symbol ';'."
-msgstr "Відокремлювати шляхи тек із іконками символом ';'."
 
 msgid "Modules directory"
 msgstr "Директорія модулів"
@@ -1888,25 +1883,15 @@ msgstr "Пріор."
 msgid "CPU set"
 msgstr "Вст. CPU"
 
-msgid "Debug"
-msgstr "Наладка"
-
 msgid "Counters"
 msgstr "Лічильники"
-
-msgid "Debug categories"
-msgstr "Категорії налагодження"
-
-msgid "See to messages"
-msgstr "Перегляд повідомлень"
 
 msgid "Finished. "
 msgstr "Закінчено. "
 
 #, c-format
-msgid "Last: %s. Load: %3.1f%% (%s from %s). Lag: %s. Cycles lost: %g."
-msgstr ""
-"Останній: %s. Навант.: %3.1f%% (%s із %s). Відстав.: %s. Втрата циклів: %g."
+msgid "Last: %s. Load: %3.1f%% (%s from %s). Lag: %s"
+msgstr "Останній: %s. Навант.: %3.1f%% (%s із %s). Відстав.: %s"
 
 msgid "Standard"
 msgstr "Стандарт"
@@ -2011,6 +1996,9 @@ msgstr "Системні зовнішні хости"
 
 msgid "External hosts poll"
 msgstr "Перелік зовнішніх хостів"
+
+msgid "User;System;User and System"
+msgstr "Корист.;Системн.;Корист. та Системн."
 
 msgid "New external host"
 msgstr "Новий зовнішній хост"
@@ -2160,6 +2148,9 @@ msgstr "Нащадок '%d' не доступний."
 #, c-format
 msgid "2:Open file '%s' error: %s"
 msgstr "2:Помилка відкриття файлу '%s': %s"
+
+msgid "3:Load file '%s' error."
+msgstr "3:Помилка завантаження файлу '%s'."
 
 msgid "The object don't attached to node of OpenSCADA tree."
 msgstr "Об'єкт не підключено до вузла дерева OpenSCADA."

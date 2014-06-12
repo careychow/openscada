@@ -1,7 +1,7 @@
 
 //OpenSCADA system module UI.Vision file: vis_devel.cpp
 /***************************************************************************
- *   Copyright (C) 2006-2008 by Roman Savochenko                           *
+ *   Copyright (C) 2006-2014 by Roman Savochenko                           *
  *   rom_as@diyaorg.dp.ua                                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -77,7 +77,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     connect(actFullScr, SIGNAL(toggled(bool)), this, SLOT(fullScreen(bool)));
     //>>> Close
     QImage ico_t;
-    if(!ico_t.load(TUIS::icoGet("close",NULL,true).c_str())) ico_t.load(":/images/close.png");
+    if(!ico_t.load(TUIS::icoPath("close").c_str())) ico_t.load(":/images/close.png");
     QAction *actClose = new QAction(QPixmap::fromImage(ico_t),_("&Close"),this);
     actClose->setShortcut(Qt::CTRL+Qt::Key_W);
     actClose->setToolTip(_("Close Vision window"));
@@ -85,7 +85,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actClose->setStatusTip(_("Press to close the current Vision developing window."));
     connect(actClose, SIGNAL(triggered()), this, SLOT(close()));
     //>>> Quit
-    if(!ico_t.load(TUIS::icoGet("exit",NULL,true).c_str())) ico_t.load(":/images/exit.png");
+    if(!ico_t.load(TUIS::icoPath("exit").c_str())) ico_t.load(":/images/exit.png");
     QAction *actQuit = new QAction(QPixmap::fromImage(ico_t),_("&Quit"),this);
     actQuit->setShortcut(Qt::CTRL+Qt::Key_Q);
     actQuit->setToolTip(_("Quit from OpenSCADA"));
@@ -93,7 +93,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actQuit->setStatusTip(_("Press for full quit from OpenSCADA system."));
     connect(actQuit, SIGNAL(triggered()), this, SLOT(quitSt()));
     //>>> About "System info"
-    if(!ico_t.load(TUIS::icoGet("help",NULL,true).c_str())) ico_t.load(":/images/help.png");
+    if(!ico_t.load(TUIS::icoPath("help").c_str())) ico_t.load(":/images/help.png");
     QAction *actAbout = new QAction(QPixmap::fromImage(ico_t),_("&About"),this);
     actAbout->setShortcut(Qt::Key_F1);
     actAbout->setToolTip(_("Program and OpenSCADA information"));
@@ -107,8 +107,9 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actQtAbout->setStatusTip(_("Press to get the using QT information."));
     connect(actQtAbout, SIGNAL(triggered()), this, SLOT(aboutQt()));
     //>>> What is
-    if(!ico_t.load(TUIS::icoGet("contexthelp",NULL,true).c_str())) ico_t.load(":/images/contexthelp.png");
+    if(!ico_t.load(TUIS::icoPath("contexthelp").c_str())) ico_t.load(":/images/contexthelp.png");
     QAction *actWhatIs = new QAction(QPixmap::fromImage(ico_t),_("What's &This"),this);
+    actWhatIs->setShortcut(Qt::SHIFT+Qt::Key_F1);
     actWhatIs->setToolTip(_("The button for question about GUI elements"));
     actWhatIs->setWhatsThis(_("Get respond about user interface elements"));
     actWhatIs->setStatusTip(_("Press to respond about user interface elements."));
@@ -116,7 +117,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
 
     //>> Page, project, widget and this library actions
     //>>> Load item from db
-    if(!ico_t.load(TUIS::icoGet("load",NULL,true).c_str())) ico_t.load(":/images/load.png");
+    if(!ico_t.load(TUIS::icoPath("load").c_str())) ico_t.load(":/images/load.png");
     actDBLoad = new QAction(QPixmap::fromImage(ico_t),_("Load from DB"),this);
     actDBLoad->setToolTip(_("Load item data from DB"));
     actDBLoad->setWhatsThis(_("The button for loading item data from DB"));
@@ -124,7 +125,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actDBLoad->setEnabled(false);
     connect(actDBLoad, SIGNAL(triggered()), this, SLOT(itDBLoad()));
     //>>> Save item to db
-    if(!ico_t.load(TUIS::icoGet("save",NULL,true).c_str())) ico_t.load(":/images/save.png");
+    if(!ico_t.load(TUIS::icoPath("save").c_str())) ico_t.load(":/images/save.png");
     actDBSave = new QAction(QPixmap::fromImage(ico_t),_("Save to DB"),this);
     actDBSave->setToolTip(_("Save item data to DB"));
     actDBSave->setWhatsThis(_("The button for saving item data to DB"));
@@ -133,7 +134,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actDBSave->setEnabled(false);
     connect(actDBSave, SIGNAL(triggered()), this, SLOT(itDBSave()));
     //>>> Run project execution
-    if(!ico_t.load(TUIS::icoGet("vision_prj_run",NULL,true).c_str())) ico_t.load(":/images/prj_run.png");
+    if(!ico_t.load(TUIS::icoPath("vision_prj_run").c_str())) ico_t.load(":/images/prj_run.png");
     actPrjRun = new QAction(QPixmap::fromImage(ico_t),_("Run project execution"),this);
     actPrjRun->setToolTip(_("Run project execution for selected item"));
     actPrjRun->setWhatsThis(_("The button for running project execution for selected item"));
@@ -141,21 +142,21 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actPrjRun->setEnabled(false);
     connect(actPrjRun, SIGNAL(triggered()), this, SLOT(prjRun()));
     //>>> Project create
-    if(!ico_t.load(TUIS::icoGet("vision_prj_new",NULL,true).c_str())) ico_t.load(":/images/prj_new.png");
+    if(!ico_t.load(TUIS::icoPath("vision_prj_new").c_str())) ico_t.load(":/images/prj_new.png");
     actPrjNew = new QAction(QPixmap::fromImage(ico_t),_("New project"),this);
     actPrjNew->setToolTip(_("New project create"));
     actPrjNew->setWhatsThis(_("The button for creation of the new project"));
     actPrjNew->setStatusTip(_("Press to create the new project."));
     connect(actPrjNew, SIGNAL(triggered()), this, SLOT(prjNew()));
     //>>> Widgets library new create
-    if(!ico_t.load(TUIS::icoGet("vision_lib_new",NULL,true).c_str())) ico_t.load(":/images/lib_new.png");
+    if(!ico_t.load(TUIS::icoPath("vision_lib_new").c_str())) ico_t.load(":/images/lib_new.png");
     actLibNew = new QAction(QPixmap::fromImage(ico_t),_("New library"),this);
     actLibNew->setToolTip(_("New widgets library creation"));
     actLibNew->setWhatsThis(_("The button for creation of the new widgets library"));
     actLibNew->setStatusTip(_("Press to create the new widgets library."));
     connect(actLibNew, SIGNAL(triggered()), this, SLOT(libNew()));
     //>>> Visual item add (widget or page)
-    if(!ico_t.load(TUIS::icoGet("vision_it_add",NULL,true).c_str())) ico_t.load(":/images/it_add.png");
+    if(!ico_t.load(TUIS::icoPath("vision_it_add").c_str())) ico_t.load(":/images/it_add.png");
     actVisItAdd = new QAction(QPixmap::fromImage(ico_t),_("Add visual item"),this);
     actVisItAdd->setToolTip(_("Add visual item into library, container widget, project or page"));
     actVisItAdd->setWhatsThis(_("The button for addition of the visual item into library, container widget, project or page"));
@@ -164,7 +165,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actVisItAdd->setEnabled(false);
     actVisItAdd->setCheckable(true);
     //>>> Visual item delete
-    if(!ico_t.load(TUIS::icoGet("vision_it_del",NULL,true).c_str())) ico_t.load(":/images/it_del.png");
+    if(!ico_t.load(TUIS::icoPath("vision_it_del").c_str())) ico_t.load(":/images/it_del.png");
     actVisItDel = new QAction(QPixmap::fromImage(ico_t),_("Delete visual item"),this);
     actVisItDel->setToolTip(_("Delete visual item from library, container widget, project or page"));
     actVisItDel->setWhatsThis(_("The button for deleting visual item from library, container widget, project or page"));
@@ -173,7 +174,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actVisItDel->setEnabled(false);
     connect(actVisItDel, SIGNAL(triggered()), this, SLOT(visualItDel()));
     //>>> Visual item properties
-    if(!ico_t.load(TUIS::icoGet("vision_it_prop",NULL,true).c_str())) ico_t.load(":/images/it_prop.png");
+    if(!ico_t.load(TUIS::icoPath("vision_it_prop").c_str())) ico_t.load(":/images/it_prop.png");
     actVisItProp = new QAction(QPixmap::fromImage(ico_t),_("Visual item properties"),this);
     actVisItProp->setToolTip(_("Get visual item properties"));
     actVisItProp->setWhatsThis(_("The button for getting the visual item properties"));
@@ -182,7 +183,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actVisItProp->setEnabled(false);
     connect(actVisItProp, SIGNAL(triggered()), this, SLOT(visualItProp()));
     //>>> Visual item graphical edit
-    if(!ico_t.load(TUIS::icoGet("vision_it_edit",NULL,true).c_str())) ico_t.load(":/images/it_edit.png");
+    if(!ico_t.load(TUIS::icoPath("vision_it_edit").c_str())) ico_t.load(":/images/it_edit.png");
     actVisItEdit = new QAction(QPixmap::fromImage(ico_t),_("Visual item edit"),this);
     actVisItEdit->setToolTip(_("Goes visual item edit"));
     actVisItEdit->setWhatsThis(_("The button for going to visual item edition"));
@@ -191,7 +192,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actVisItEdit->setEnabled(false);
     connect(actVisItEdit, SIGNAL(triggered()), this, SLOT(visualItEdit()));
     //>>> Visual item changes clear
-    if(!ico_t.load(TUIS::icoGet("vision_it_clear",NULL,true).c_str())) ico_t.load(":/images/it_clear.png");
+    if(!ico_t.load(TUIS::icoPath("vision_it_clear").c_str())) ico_t.load(":/images/it_clear.png");
     actVisItClear = new QAction(QPixmap::fromImage(ico_t),_("Visual item changes clear"),this);
     actVisItClear->setToolTip(_("Goes visual item changes clear"));
     actVisItClear->setWhatsThis(_("The button for going to visual item changes clear"));
@@ -199,7 +200,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actVisItClear->setEnabled(false);
     connect(actVisItClear, SIGNAL(triggered()), this, SLOT(visualItClear()));
     //>>> UnDo visual item changes
-    if(!ico_t.load(TUIS::icoGet("undo",NULL,true).c_str())) ico_t.load(":/images/undo.png");
+    if(!ico_t.load(TUIS::icoPath("undo").c_str())) ico_t.load(":/images/undo.png");
     actVisItUnDo = new QAction(QPixmap::fromImage(ico_t),_("Visual item changes UnDo"),this);
     actVisItUnDo->setObjectName("undo");
     actVisItUnDo->setToolTip(_("Make visual item changes UnDo:"));
@@ -208,7 +209,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actVisItUnDo->setShortcut(QKeySequence("Ctrl+Z"));
     actVisItUnDo->setEnabled(false);
     //>>> ReDo visual item changes
-    if(!ico_t.load(TUIS::icoGet("redo",NULL,true).c_str())) ico_t.load(":/images/redo.png");
+    if(!ico_t.load(TUIS::icoPath("redo").c_str())) ico_t.load(":/images/redo.png");
     actVisItReDo = new QAction(QPixmap::fromImage(ico_t),_("Visual item changes ReDo"),this);
     actVisItReDo->setObjectName("redo");
     actVisItReDo->setToolTip(_("Make visual item changes ReDo:"));
@@ -217,7 +218,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actVisItReDo->setShortcut(QKeySequence("Ctrl+Y"));
     actVisItReDo->setEnabled(false);
     //>>> Cut visual item
-    if(!ico_t.load(TUIS::icoGet("editcut",NULL,true).c_str())) ico_t.load(":/images/editcut.png");
+    if(!ico_t.load(TUIS::icoPath("editcut").c_str())) ico_t.load(":/images/editcut.png");
     actVisItCut = new QAction(QPixmap::fromImage(ico_t),_("Visual item cut"),this);
     actVisItCut->setObjectName("editcut");
     actVisItCut->setToolTip(_("Make visual item cut"));
@@ -227,7 +228,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actVisItCut->setEnabled(false);
     connect(actVisItCut, SIGNAL(triggered()), this, SLOT(visualItCut()));
     //>>> Copy visual item
-    if(!ico_t.load(TUIS::icoGet("editcopy",NULL,true).c_str())) ico_t.load(":/images/editcopy.png");
+    if(!ico_t.load(TUIS::icoPath("editcopy").c_str())) ico_t.load(":/images/editcopy.png");
     actVisItCopy = new QAction(QPixmap::fromImage(ico_t),_("Visual item copy"),this);
     actVisItCopy->setObjectName("editcopy");
     actVisItCopy->setToolTip(_("Make visual item copy"));
@@ -237,7 +238,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actVisItCopy->setEnabled(false);
     connect(actVisItCopy, SIGNAL(triggered()), this, SLOT(visualItCopy()));
     //>>> Paste visual item
-    if(!ico_t.load(TUIS::icoGet("editpaste",NULL,true).c_str())) ico_t.load(":/images/editpaste.png");
+    if(!ico_t.load(TUIS::icoPath("editpaste").c_str())) ico_t.load(":/images/editpaste.png");
     actVisItPaste = new QAction(QPixmap::fromImage(ico_t),_("Visual item paste"),this);
     actVisItPaste->setObjectName("editpaste");
     actVisItPaste->setToolTip(_("Make visual item paste"));
@@ -249,7 +250,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
 
     //>> Widgets level actions
     //>>> Level up for widget
-    if(!ico_t.load(TUIS::icoGet("vision_level_up",NULL,true).c_str())) ico_t.load(":/images/level_up.png");
+    if(!ico_t.load(TUIS::icoPath("vision_level_up").c_str())) ico_t.load(":/images/level_up.png");
     actLevUp = new QAction(QPixmap::fromImage(ico_t),_("Up widget"),this);
     actLevUp->setObjectName("level_up");
     actLevUp->setToolTip(_("Raise selected widget to the top"));
@@ -257,7 +258,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actLevUp->setStatusTip(_("Press to raise the selected widget to the top."));
     actLevUp->setEnabled(false);
     //>>> Level down for widget
-    if(!ico_t.load(TUIS::icoGet("vision_level_down",NULL,true).c_str())) ico_t.load(":/images/level_down.png");
+    if(!ico_t.load(TUIS::icoPath("vision_level_down").c_str())) ico_t.load(":/images/level_down.png");
     actLevDown = new QAction(QPixmap::fromImage(ico_t),_("Down widget"),this);
     actLevDown->setObjectName("level_down");
     actLevDown->setToolTip(_("Down selected widget to the bottom"));
@@ -265,7 +266,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actLevDown->setStatusTip(_("Press to down the selected widget to the bottom."));
     actLevDown->setEnabled(false);
     //>>> Rise widget
-    if(!ico_t.load(TUIS::icoGet("vision_level_rise",NULL,true).c_str())) ico_t.load(":/images/level_rise.png");
+    if(!ico_t.load(TUIS::icoPath("vision_level_rise").c_str())) ico_t.load(":/images/level_rise.png");
     actLevRise = new QAction(QPixmap::fromImage(ico_t),_("Rise widget"),this);
     actLevRise->setObjectName("level_rise");
     actLevRise->setToolTip(_("Raise selected widget"));
@@ -273,7 +274,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actLevRise->setStatusTip(_("Press to raise the selected widget."));
     actLevRise->setEnabled(false);
     //>>> Lower widget
-    if(!ico_t.load(TUIS::icoGet("vision_level_lower",NULL,true).c_str())) ico_t.load(":/images/level_lower.png");
+    if(!ico_t.load(TUIS::icoPath("vision_level_lower").c_str())) ico_t.load(":/images/level_lower.png");
     actLevLower = new QAction(QPixmap::fromImage(ico_t),_("Lower widget"),this);
     actLevLower->setObjectName("level_lower");
     actLevLower->setToolTip(_("Down selected widget"));
@@ -283,7 +284,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
 
     //>> Widgets alignment actions
     //>>> Align widgets left
-    if(!ico_t.load(TUIS::icoGet("vision_align_left",NULL,true).c_str())) ico_t.load(":/images/align_left.png");
+    if(!ico_t.load(TUIS::icoPath("vision_align_left").c_str())) ico_t.load(":/images/align_left.png");
     actAlignLeft = new QAction(QPixmap::fromImage(ico_t),_("Align to left"),this);
     actAlignLeft->setObjectName("align_left");
     actAlignLeft->setToolTip(_("Align selected widgets to the left"));
@@ -291,7 +292,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actAlignLeft->setStatusTip(_("Press to align selected widgets to the left."));
     actAlignLeft->setEnabled(false);
     //>>> Align widgets to vertical center
-    if(!ico_t.load(TUIS::icoGet("vision_align_vcenter",NULL,true).c_str())) ico_t.load(":/images/align_vcenter.png");
+    if(!ico_t.load(TUIS::icoPath("vision_align_vcenter").c_str())) ico_t.load(":/images/align_vcenter.png");
     actAlignVCenter = new QAction(QPixmap::fromImage(ico_t),_("Align to vertical center"),this);
     actAlignVCenter->setObjectName("align_vcenter");
     actAlignVCenter->setToolTip(_("Align selected widgets to the vertical center"));
@@ -299,7 +300,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actAlignVCenter->setStatusTip(_("Press to align selected widgets to the vertical center."));
     actAlignVCenter->setEnabled(false);
     //>>> Align widgets to right
-    if(!ico_t.load(TUIS::icoGet("vision_align_right",NULL,true).c_str())) ico_t.load(":/images/align_right.png");
+    if(!ico_t.load(TUIS::icoPath("vision_align_right").c_str())) ico_t.load(":/images/align_right.png");
     actAlignRight = new QAction(QPixmap::fromImage(ico_t),_("Align to right"),this);
     actAlignRight->setObjectName("align_right");
     actAlignRight->setToolTip(_("Align selected widgets to the right"));
@@ -307,7 +308,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actAlignRight->setStatusTip(_("Press to align selected widgets to the right."));
     actAlignRight->setEnabled(false);
     //>>> Align widgets to top
-    if(!ico_t.load(TUIS::icoGet("vision_align_top",NULL,true).c_str())) ico_t.load(":/images/align_top.png");
+    if(!ico_t.load(TUIS::icoPath("vision_align_top").c_str())) ico_t.load(":/images/align_top.png");
     actAlignTop = new QAction(QPixmap::fromImage(ico_t),_("Align to top"),this);
     actAlignTop->setObjectName("align_top");
     actAlignTop->setToolTip(_("Align selected widgets to the top"));
@@ -315,7 +316,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actAlignTop->setStatusTip(_("Press to align selected widgets to the top."));
     actAlignTop->setEnabled(false);
     //>>> Align widgets to horizontal center
-    if(!ico_t.load(TUIS::icoGet("vision_align_hcenter",NULL,true).c_str())) ico_t.load(":/images/align_hcenter.png");
+    if(!ico_t.load(TUIS::icoPath("vision_align_hcenter").c_str())) ico_t.load(":/images/align_hcenter.png");
     actAlignHCenter = new QAction(QPixmap::fromImage(ico_t),_("Align to horizontal center"),this);
     actAlignHCenter->setObjectName("align_hcenter");
     actAlignHCenter->setToolTip(_("Align selected widgets to the horizontal center"));
@@ -323,7 +324,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actAlignHCenter->setStatusTip(_("Press to align selected widgets to the horizontal center."));
     actAlignHCenter->setEnabled(false);
     //>>> Align widgets to bottom
-    if(!ico_t.load(TUIS::icoGet("vision_align_bottom",NULL,true).c_str())) ico_t.load(":/images/align_bottom.png");
+    if(!ico_t.load(TUIS::icoPath("vision_align_bottom").c_str())) ico_t.load(":/images/align_bottom.png");
     actAlignBottom = new QAction(QPixmap::fromImage(ico_t),_("Align to bottom"),this);
     actAlignBottom->setObjectName("align_bottom");
     actAlignBottom->setToolTip(_("Align selected widgets to the bottom"));
@@ -333,7 +334,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
 
     //>> Elementar figure actions
     //>>> Unset cursor
-    if(!ico_t.load(TUIS::icoGet("vision_elfig_cursor",NULL,true).c_str())) ico_t.load(":/images/elfig_cursor.png");
+    if(!ico_t.load(TUIS::icoPath("vision_elfig_cursor").c_str())) ico_t.load(":/images/elfig_cursor.png");
     actElFigCursorAct = new QAction(QPixmap::fromImage(ico_t),_("Cursor"),this);
     actElFigCursorAct->setCheckable(true);
     actElFigCursorAct->setChecked(true);
@@ -343,7 +344,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actElFigCursorAct->setStatusTip(_("Press to unset cursor"));
     actElFigCursorAct->setEnabled(false);
     //>>> Line creation
-    if(!ico_t.load(TUIS::icoGet("vision_elfig_line",NULL,true).c_str())) ico_t.load(":/images/elfig_line.png");
+    if(!ico_t.load(TUIS::icoPath("vision_elfig_line").c_str())) ico_t.load(":/images/elfig_line.png");
     actElFigLine = new QAction(QPixmap::fromImage(ico_t),_("Add line"),this);
     actElFigLine->setCheckable(true);
     actElFigLine->setObjectName("line");
@@ -352,7 +353,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actElFigLine->setStatusTip(_("Press to add line to elementary figure."));
     actElFigLine->setEnabled(false);
     //>>> Arc creation
-    if(!ico_t.load(TUIS::icoGet("vision_elfig_arc",NULL,true).c_str())) ico_t.load(":/images/elfig_arc.png");
+    if(!ico_t.load(TUIS::icoPath("vision_elfig_arc").c_str())) ico_t.load(":/images/elfig_arc.png");
     actElFigArc = new QAction(QPixmap::fromImage(ico_t),_("Add arc"),this);
     actElFigArc->setCheckable(true);
     actElFigArc->setObjectName("arc");
@@ -361,7 +362,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actElFigArc->setStatusTip(_("Press to add arc to elementary figure."));
     actElFigArc->setEnabled(false);
     //>>> Add Besie curve
-    if(!ico_t.load(TUIS::icoGet("vision_elfig_besie",NULL,true).c_str())) ico_t.load(":/images/elfig_besie.png");
+    if(!ico_t.load(TUIS::icoPath("vision_elfig_besie").c_str())) ico_t.load(":/images/elfig_besie.png");
     actElFigBesie = new QAction(QPixmap::fromImage(ico_t),_("Add Besier curve"),this);
     actElFigBesie->setCheckable(true);
     actElFigBesie->setObjectName("besier");
@@ -370,7 +371,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     actElFigBesie->setStatusTip(_("Press to add Besier curve to elementary figure."));
     actElFigBesie->setEnabled(false);
     //>>> Add Hold points check
-    if(!ico_t.load(TUIS::icoGet("vision_elfig_lock",NULL,true).c_str())) ico_t.load(":/images/elfig_lock.png");
+    if(!ico_t.load(TUIS::icoPath("vision_elfig_lock").c_str())) ico_t.load(":/images/elfig_lock.png");
     actElFigCheckAct=new QAction(QPixmap::fromImage(ico_t),_("Connections"),this);
     actElFigCheckAct->setCheckable(true);
     actElFigCheckAct->setChecked(true);
@@ -620,7 +621,7 @@ VisDevelop::VisDevelop( const string &open_user, const string &user_pass, const 
     for(int i_ch = 0; i_ch < children().size(); i_ch++)
     {
 	if(!qobject_cast<QToolBar*>(children()[i_ch])) continue;
-	int icSz = atoi(mod->uiPropGet((children()[i_ch]->objectName()+"_icSz").toAscii().data(),user()).c_str());
+	int icSz = atoi(mod->uiPropGet((children()[i_ch]->objectName()+"_icSz").toStdString(),user()).c_str());
 	if(icSz) ((QToolBar*)children()[i_ch])->setIconSize(QSize(icSz,icSz));
     }
 
@@ -672,17 +673,17 @@ QString VisDevelop::getFileName(const QString &caption, const QString &dir, cons
 
 string VisDevelop::user( )
 {
-    return mWUser->user().toAscii().data();
+    return mWUser->user().toStdString();
 }
 
 string VisDevelop::password( )
 {
-    return mWUser->pass().toAscii().data();
+    return mWUser->pass().toStdString();
 }
 
 string VisDevelop::VCAStation( )
 {
-    return mWUser->VCAStation().toAscii().data();
+    return mWUser->VCAStation().toStdString();
 }
 
 bool VisDevelop::wdgScale( )
@@ -697,12 +698,12 @@ void VisDevelop::setWdgScale( bool val )
 
 double VisDevelop::wdgVisScale( )
 {
-    return atof(mWVisScale->text().toAscii().data());
+    return atof(mWVisScale->text().toStdString().c_str());
 }
 
 void VisDevelop::setWdgVisScale(double val )
 {
-    mWVisScale->setText((TSYS::real2str(TSYS::realRound(val*100,POS_PREC_DIG,true))+"%").c_str());
+    mWVisScale->setText((r2s(TSYS::realRound(val*100,POS_PREC_DIG,true))+"%").c_str());
 }
 
 void VisDevelop::closeEvent( QCloseEvent* ce )
@@ -766,12 +767,12 @@ void VisDevelop::setToolIconSize( )
 {
     if(!sender()) return;
 
-    QToolBar *tb = qobject_cast<QToolBar*>((QToolBar*)TSYS::str2addr(sender()->property("toolAddr").toString().toAscii().data()));
-    int icSz = atoi(sender()->objectName().toAscii().data());
+    QToolBar *tb = qobject_cast<QToolBar*>((QToolBar*)TSYS::str2addr(sender()->property("toolAddr").toString().toStdString()));
+    int icSz = atoi(sender()->objectName().toStdString().c_str());
     if(tb)
     {
 	tb->setIconSize(QSize(icSz,icSz));
-	mod->uiPropSet((tb->objectName()+"_icSz").toAscii().data(),TSYS::int2str(icSz),user());
+	mod->uiPropSet((tb->objectName()+"_icSz").toStdString(), i2s(icSz), user());
     }
 }
 
@@ -997,23 +998,22 @@ void VisDevelop::itDBSave( )
 	if(mStModify->text() != "*") return;
 	own_wdg = "/";
     }
-    if( !own_wdg.empty() )
+    if(!own_wdg.empty())
     {
 	//> Request to confirm
-	InputDlg dlg(this,actDBSave->icon(),
+	InputDlg dlg(this, actDBSave->icon(),
 		(own_wdg == "/" ? QString(_("Are you sure of saving all modifications to DB?")) :
 		QString(_("Are you sure of saving visual items '%1' to DB?")).arg(QString(own_wdg.c_str()).replace(";","; "))),
-		_("Save visual item's data to DB"),false,false);
-	if( dlg.exec() == QDialog::Accepted )
+		_("Save visual item's data to DB"), false, false);
+	if(dlg.exec() == QDialog::Accepted)
 	{
 	    string cur_wdg;
-	    for( int i_off = 0; (cur_wdg=TSYS::strSepParse(own_wdg,0,';',&i_off)).size(); )
+	    for(int i_off = 0; (cur_wdg=TSYS::strSepParse(own_wdg,0,';',&i_off)).size(); )
 	    {
 		//>> Send load request
 		XMLNode req("save");
-		req.setAttr("path",cur_wdg+"/%2fobj");
-		if( cntrIfCmd(req) )
-		    mod->postMess(req.attr("mcat").c_str(),req.text().c_str(),TVision::Error,this);
+		req.setAttr("path", cur_wdg+"/%2fobj");
+		if(cntrIfCmd(req)) mod->postMess(req.attr("mcat").c_str(), req.text().c_str(), TVision::Error, this);
 	    }
 	}
     }
@@ -1022,7 +1022,7 @@ void VisDevelop::itDBSave( )
 
 void VisDevelop::prjRun( )
 {
-    string own_wdg = TSYS::strSepParse(work_wdg,0,';');
+    string own_wdg = TSYS::strSepParse(work_wdg, 0, ';');
 
     VisRun *sess = new VisRun(own_wdg, user(), password(), VCAStation());
     sess->show();
@@ -1032,50 +1032,40 @@ void VisDevelop::prjRun( )
 
 void VisDevelop::prjNew( )
 {
-    InputDlg dlg(this,actPrjNew->icon(),
-	    _("Enter new project's identifier and name."),_("New project"),true,true);
+    InputDlg dlg(this, actPrjNew->icon(), _("Enter new project's identifier and name."), _("New project"), true, true);
     dlg.setIdLen(30);
-    if( dlg.exec() == QDialog::Accepted )
+    if(dlg.exec() == QDialog::Accepted)
     {
 	XMLNode req("add");
-	req.setAttr("path","/%2fprm%2fcfg%2fprj")->
-	    setAttr("id",dlg.id().toAscii().data())->
-	    setText(dlg.name().toAscii().data());
-	if( cntrIfCmd(req) )
-	    mod->postMess(req.attr("mcat").c_str(),req.text().c_str(),TVision::Error,this);
+	req.setAttr("path", "/%2fprm%2fcfg%2fprj")->setAttr("id", dlg.id().toStdString())->setText(dlg.name().toStdString());
+	if(cntrIfCmd(req)) mod->postMess(req.attr("mcat").c_str(), req.text().c_str(), TVision::Error, this);
 	else
 	{
+	    string nId = req.attr("id");
 	    //>> Set enable for item container
-	    req.clear()->setName("set")->
-			 setAttr("path",string("/prj_")+dlg.id().toAscii().data()+"/%2fobj%2fst%2fen")->
-			 setText("1");
+	    req.clear()->setName("set")->setAttr("path", "/prj_"+nId+"/%2fobj%2fst%2fen")->setText("1");
 	    cntrIfCmd(req);
-	    emit modifiedItem(string("prj_")+dlg.id().toAscii().data());
+	    emit modifiedItem("prj_"+nId);
 	}
     }
 }
 
 void VisDevelop::libNew( )
 {
-    InputDlg dlg(this,actPrjNew->icon(),
-	    _("Enter new widget's library identifier and name."),_("New widget's library"),true,true);
+    InputDlg dlg(this, actPrjNew->icon(), _("Enter new widget's library identifier and name."), _("New widget's library"), true, true);
     dlg.setIdLen(30);
-    if( dlg.exec() == QDialog::Accepted )
+    if(dlg.exec() == QDialog::Accepted)
     {
 	XMLNode req("add");
-	req.setAttr("path","/%2fprm%2fcfg%2fwlb")->
-	    setAttr("id",dlg.id().toAscii().data())->
-	    setText(dlg.name().toAscii().data());
-	if( cntrIfCmd(req) )
-	    mod->postMess(req.attr("mcat").c_str(),req.text().c_str(),TVision::Error,this);
+	req.setAttr("path", "/%2fprm%2fcfg%2fwlb")->setAttr("id",dlg.id().toStdString())->setText(dlg.name().toStdString());
+	if(cntrIfCmd(req)) mod->postMess(req.attr("mcat").c_str(), req.text().c_str(), TVision::Error, this);
 	else
 	{
+	    string nId = req.attr("id");
 	    //>> Set enable for item container
-	    req.clear()->setName("set")->
-			 setAttr("path",string("/wlb_")+dlg.id().toAscii().data()+"/%2fobj%2fst%2fen")->
-			 setText("1");
+	    req.clear()->setName("set")->setAttr("path", "/wlb_"+nId+"/%2fobj%2fst%2fen")->setText("1");
 	    cntrIfCmd(req);
-	    emit modifiedItem(string("wlb_")+dlg.id().toAscii().data());
+	    emit modifiedItem("wlb_"+nId);
 	}
     }
 }
@@ -1085,29 +1075,29 @@ void VisDevelop::visualItAdd( QAction *cact, const QPointF &pnt, const string &i
     XMLNode req("get");
     //QAction *cact = (QAction *)sender();
     string own_wdg = iOwn.empty() ? TSYS::strSepParse(work_wdg,0,';') : iOwn;
-    string par_nm = cact->objectName().toAscii().data();
+    string par_nm = cact->objectName().toStdString();
+    QMdiSubWindow *actSubW = work_space->activeSubWindow();
 
-    if(work_space->activeSubWindow() && !wdgTree->hasFocus() && !prjTree->hasFocus() && pnt.isNull() &&
-	    !((DevelWdgView*)((QScrollArea*)work_space->activeSubWindow()->widget())->widget())->edit())
+    if(actSubW && !wdgTree->hasFocus() && !prjTree->hasFocus() && pnt.isNull() &&
+	    !((DevelWdgView*)((QScrollArea*)actSubW->widget())->widget())->edit())
 	return;
 
     //> Count level
     int p_el_cnt = 0;
     for(int i_off = 0; TSYS::pathLev(own_wdg,0,true,&i_off).size(); p_el_cnt++) ;
-    string sid1 = TSYS::pathLev(own_wdg,0);
+    string sid1 = TSYS::pathLev(own_wdg, 0);
 
     //> Make request id and name dialog
-    InputDlg dlg(this,cact->icon(),
-	    _("Enter new widget's/page's identifier and name."),_("Create widget/page"),true,true);
+    InputDlg dlg(this, cact->icon(), _("Enter new widget's/page's identifier and name."), _("Create widget/page"), true, true);
     dlg.setIdLen(30);
 
     if(p_el_cnt > 1 && iWid.empty())
     {
 	//>> New include item id generator
 	//>>> Present include widgets list request
-	if(sid1.substr(0,4) == "prj_" && pnt.isNull()) req.setAttr("path",own_wdg+"/%2fpage%2fpage");
-	else req.setAttr("path",own_wdg+"/%2finclwdg%2fwdg");
-	if(cntrIfCmd(req)) mod->postMess(req.attr("mcat").c_str(),req.text().c_str(),TVision::Error,this);
+	if(!sid1.compare(0,4,"prj_") && pnt.isNull()) req.setAttr("path", own_wdg+"/%2fpage%2fpage");
+	else req.setAttr("path", own_wdg+"/%2finclwdg%2fwdg");
+	if(cntrIfCmd(req)) mod->postMess(req.attr("mcat").c_str(), req.text().c_str(), TVision::Error, this);
 	else
 	{
 	    //>>> Get parent widget id
@@ -1115,74 +1105,75 @@ void VisDevelop::visualItAdd( QAction *cact, const QPointF &pnt, const string &i
 	    if(!par_nm.empty())	base_nm = TSYS::pathLev(par_nm,1,true).substr(4);
 	    unsigned i_c = 1, i_w = 0;
 	    while(i_w < req.childSize())
-		if(req.childGet(i_w)->attr("id") == base_nm+TSYS::int2str(i_c))	{ i_w = 0; i_c++; }
+		if(req.childGet(i_w)->attr("id") == base_nm+i2s(i_c))	{ i_w = 0; i_c++; }
 		else i_w++;
-	    dlg.setId((base_nm+TSYS::int2str(i_c)).c_str());
+	    dlg.setId((base_nm+i2s(i_c)).c_str());
 	}
     }
 
     //>> Execute dialog
     if(!iWid.empty() || dlg.exec() == QDialog::Accepted)
     {
-	string w_id = iWid.empty() ? dlg.id().toAscii().data() : iWid;
-	string w_nm = iWid.empty() ? dlg.name().toAscii().data() : iWnm;
+	string w_id = iWid.empty() ? dlg.id().toStdString() : iWid;
+	string w_nm = iWid.empty() ? dlg.name().toStdString() : iWnm;
 
 	//>> Check for widget's library
 	req.clear()->setName("add");
 	string new_wdg;
-	if(sid1.substr(0,4) == "wlb_")
+	if(!sid1.compare(0,4,"wlb_"))
 	{
-	    if(p_el_cnt == 1)
-		req.setAttr("path",own_wdg+"/%2fwdg%2fwdg")->setAttr("id",w_id)->setText(w_nm);
-	    else req.setAttr("path",own_wdg+"/%2finclwdg%2fwdg")->setAttr("id",w_id)->setText(w_nm);
-	    new_wdg = own_wdg+"/wdg_"+w_id;
+	    if(p_el_cnt == 1) req.setAttr("path", own_wdg+"/%2fwdg%2fwdg")->setAttr("id", w_id)->setText(w_nm);
+	    else req.setAttr("path", own_wdg+"/%2finclwdg%2fwdg")->setAttr("id", w_id)->setText(w_nm);
+	    new_wdg = own_wdg + "/wdg_";
 	}
-	else if(sid1.substr(0,4) == "prj_")
+	else if(!sid1.compare(0,4,"prj_"))
 	{
 	    if(pnt.isNull())
 	    {
-		req.setAttr("path",own_wdg+"/%2fpage%2fpage")->setAttr("id",w_id)->setText(w_nm);
-		new_wdg = own_wdg+"/pg_"+w_id;
+		req.setAttr("path", own_wdg+"/%2fpage%2fpage")->setAttr("id", w_id)->setText(w_nm);
+		new_wdg = own_wdg + "/pg_";
 	    }
 	    else
 	    {
-		req.setAttr("path",own_wdg+"/%2finclwdg%2fwdg")->setAttr("id",w_id)->setText(w_nm);
-		new_wdg = own_wdg+"/wdg_"+w_id;
+		req.setAttr("path", own_wdg+"/%2finclwdg%2fwdg")->setAttr("id", w_id)->setText(w_nm);
+		new_wdg = own_wdg + "/wdg_";
 	    }
 	}
 
 	//>> Create widget
 	int err = cntrIfCmd(req);
-	if(err) mod->postMess(req.attr("mcat").c_str(),req.text().c_str(),TVision::Error,this);
+	if(err) mod->postMess(req.attr("mcat").c_str(), req.text().c_str(), TVision::Error, this);
 	else
 	{
+	    new_wdg += req.attr("id");
 	    //>>> Set some parameters
 	    req.clear()->setName("set");
 	    if(!par_nm.empty())
 	    {
 		//>>>> Set parent widget name and enable item
-		req.setAttr("path",new_wdg+"/%2fwdg%2fst%2fparent")->setText(par_nm);
+		req.setAttr("path", new_wdg+"/%2fwdg%2fst%2fparent")->setText(par_nm);
 		err = cntrIfCmd(req);
-		req.setAttr("path",new_wdg+"/%2fwdg%2fst%2fen")->setText("1");
+		req.setAttr("path", new_wdg+"/%2fwdg%2fst%2fen")->setText("1");
 		err = cntrIfCmd(req);
 	    }
 	    //>>>> Set geometry for include widget
 	    if(!err && !pnt.isNull())
 	    {
-		req.setAttr("path",new_wdg+"/%2fattr%2fgeomX")->setText(TSYS::real2str(pnt.x()));
+		req.setAttr("path", new_wdg+"/%2fattr%2fgeomX")->setText(r2s(pnt.x()));
 		err = cntrIfCmd(req);
-		req.setAttr("path",new_wdg+"/%2fattr%2fgeomY")->setText(TSYS::real2str(pnt.y()));
+		req.setAttr("path", new_wdg+"/%2fattr%2fgeomY")->setText(r2s(pnt.y()));
 		err = cntrIfCmd(req);
 
 		//> Send change request to opened for edit widget
 		if(!chNoWr)
 		{
             	    DevelWdgView *dw = work_space->findChild<DevelWdgView*>(own_wdg.c_str());
-            	    if(dw) dw->chRecord(*XMLNode("chldAdd").setAttr("path",new_wdg)->setAttr("id",w_id)->setAttr("name",w_nm)->setAttr("parent",par_nm)->
-            			setAttr("x",TSYS::real2str(pnt.x()))->setAttr("y",TSYS::real2str(pnt.y())));
+            	    if(dw) dw->chRecord(*XMLNode("chldAdd").setAttr("path", new_wdg)->setAttr("id", w_id)->setAttr("name", w_nm)->
+            		setAttr("parent", par_nm)->setAttr("x",r2s(pnt.x()))->setAttr("y",r2s(pnt.y())));
             	}
+		work_space->setActiveSubWindow(actSubW);	//For set focus to target subwindow and the new widget select
 	    }
-	    if(err) mod->postMess(req.attr("mcat").c_str(),req.text().c_str(),TVision::Error,this);
+	    if(err) mod->postMess(req.attr("mcat").c_str(), req.text().c_str(), TVision::Error, this);
 	    emit modifiedItem(new_wdg);
 	}
     }
@@ -1224,33 +1215,26 @@ void VisDevelop::visualItDel( const string &itms, bool chNoWr )
 	//Check for widget's library
 	if(sid1.empty())
 	{
-	    if(it_id.substr(0,4) == "wlb_")
-		req.setAttr("path","/%2fprm%2fcfg%2fwlb")->setAttr("id",it_id.substr(4));
-	    else if(it_id.substr(0,4) == "prj_")
-		req.setAttr("path","/%2fprm%2fcfg%2fprj")->setAttr("id",it_id.substr(4));
+	    if(!it_id.compare(0,4,"wlb_")) req.setAttr("path", "/%2fprm%2fcfg%2fwlb")->setAttr("id", it_id.substr(4));
+	    else if(!it_id.compare(0,4,"prj_")) req.setAttr("path","/%2fprm%2fcfg%2fprj")->setAttr("id",it_id.substr(4));
 	}
-	else if(sid1.substr(0,4) == "wlb_")
+	else if(!sid1.compare(0,4,"wlb_"))
 	{
-	    if(p_el_cnt <= 2)
-		req.setAttr("path",it_own+"/%2fwdg%2fwdg")->setAttr("id",it_id.substr(4));
-	    else req.setAttr("path",it_own+"/%2finclwdg%2fwdg")->setAttr("id",it_id.substr(4));
+	    if(p_el_cnt <= 2) req.setAttr("path", it_own+"/%2fwdg%2fwdg")->setAttr("id", it_id.substr(4));
+	    else req.setAttr("path", it_own+"/%2finclwdg%2fwdg")->setAttr("id", it_id.substr(4));
 	}
-	else if(sid1.substr(0,4) == "prj_")
+	else if(!sid1.compare(0,4,"prj_"))
 	{
-	    if(p_el_cnt <= 2)
-		req.setAttr("path",it_own+"/%2fpage%2fpage")->setAttr("id",it_id.substr(3));
-	    else if(it_id.substr(0,3) == "pg_")
-		req.setAttr("path",it_own+"/%2fpage%2fpage")->setAttr("id",it_id.substr(3));
-	    else req.setAttr("path",it_own+"/%2finclwdg%2fwdg")->setAttr("id",it_id.substr(4));
+	    if(p_el_cnt <= 2) req.setAttr("path", it_own+"/%2fpage%2fpage")->setAttr("id", it_id.substr(3));
+	    else if(!it_id.compare(0,3,"pg_")) req.setAttr("path", it_own+"/%2fpage%2fpage")->setAttr("id", it_id.substr(3));
+	    else req.setAttr("path", it_own+"/%2finclwdg%2fwdg")->setAttr("id", it_id.substr(4));
 	}
 
 	//> Save removed widget context for change record
-	if(!chNoWr && (dw=work_space->findChild<DevelWdgView*>(del_wdg.c_str())))
-	    dw->chLoadCtx(chCtx, "parent;");
+	if(!chNoWr && (dw=work_space->findChild<DevelWdgView*>(del_wdg.c_str()))) dw->chLoadCtx(chCtx, "parent;");
 
 	//> Send remove context
-	if(cntrIfCmd(req))
-	    mod->postMess(req.attr("mcat").c_str(),req.text().c_str(),TVision::Error,this);
+	if(cntrIfCmd(req))	mod->postMess(req.attr("mcat").c_str(), req.text().c_str(), TVision::Error, this);
 	else if(p_el_cnt < 3)	emit modifiedItem(del_wdg);
 	else
 	{
@@ -1352,7 +1336,7 @@ void VisDevelop::visualItClear( const string &el_wa )
     string clrW;
     string work_wdg_loc, work_attr;
 
-    if( el_wa.empty() )
+    if(el_wa.empty())
     {
 	work_wdg_loc = work_wdg;
 
@@ -1360,7 +1344,7 @@ void VisDevelop::visualItClear( const string &el_wa )
 		QString(_("Are you sure of clear all changes for visual items: '%1'?\n"
 			  "All changes will be lost and variables are returning to default values or will be inherited!")).arg(QString(work_wdg_loc.c_str()).replace(";","; ")),
 		_("Visual items' changes clear"),false,false);
-	if( dlg.exec() != QDialog::Accepted )	return;
+	if(dlg.exec() != QDialog::Accepted)	return;
     }
     else
     {
@@ -1406,109 +1390,98 @@ void VisDevelop::visualItPaste( const string &wsrc, const string &wdst, const st
     string work_wdg_w = wdst.empty() ? work_wdg : wdst;
     vector<string> copy_els;
     QCheckBox *wInher = NULL;
+    int zLev = 0;
 
     InputDlg dlg(this,actVisItPaste->icon(),"",_("Visual items move or copy"),true,true);
     dlg.setIdLen(30);
     for(int w_off = 0; (copy_buf_el=TSYS::strSepParse(copy_buf_w.substr(1),0,';',&w_off)).size(); )
     {
 	string s_elp, d_elp, s_el, d_el, t_el, t1_el;
-	//> Destination elements calc
+	//Destination elements calc
 	int n_del = 0;
 	for(int off = 0; !(t_el=TSYS::pathLev(work_wdg_w,0,true,&off)).empty(); n_del++)
 	{ if(n_del) d_elp += ("/"+d_el); d_el = t_el; }
-	//> Src elements calc
+	//Src elements calc
 	int n_sel = 0;
 	for(int off = 0; !(t_el=TSYS::pathLev(copy_buf_el,0,true,&off)).empty(); n_sel++)
 	{ if(n_sel) s_elp += ("/"+s_el); s_el = t_el; }
 
-	//> Copy visual item
+	//Copy visual item
 	XMLNode req("get");
-	//>> Project copy
+	// Project copy
 	if(s_el.substr(0,4) == "prj_")
 	{
 	    t_el = (QString((copy_buf_w[0] == '1') ? _("Project '%1' move.\n") : _("Project '%1' copy.\n"))+
-		_("Enter new project's identifier and name.")).arg(s_el.substr(4).c_str()).toAscii().data();
+		_("Enter new project's identifier and name.")).arg(s_el.substr(4).c_str()).toStdString();
 	    req.setAttr("path","/%2fprm%2fcfg%2fprj");
 	    d_el = "prj_";
 	    t1_el = s_el.substr(4);
 	}
-	//>> Widget's library copy
+	// Widget's library copy
 	else if(s_el.substr(0,4) == "wlb_")
 	{
 	    t_el = (QString((copy_buf_w[0] == '1') ? _("Widget's library '%1' move.\n") : _("Widget's library '%1' copy.\n"))+
-		_("Enter new widget's library identifier and name.")).arg(s_el.substr(4).c_str()).toAscii().data();
+		_("Enter new widget's library identifier and name.")).arg(s_el.substr(4).c_str()).toStdString();
 	    req.setAttr("path","/%2fprm%2fcfg%2fwlb");
 	    d_el = "wlb_";
 	    t1_el = s_el.substr(4);
 	}
-	//>> Page copy
+	// Page copy
 	else if(s_el.substr(0,3) == "pg_" && (d_el.substr(0,4) == "prj_" || d_el.substr(0,3) == "pg_" || d_el.substr(0,4) == "wlb_"))
 	{
 	    t_el = (QString((copy_buf_w[0] == '1') ? _("Move page '%1' to '%2'.\n") : _("Copy page '%1' to '%2'.\n"))+
-		_("Enter new widget's/page's identifier and name.")).arg(copy_buf_el.c_str()).arg(work_wdg_w.c_str()).toAscii().data();
+		_("Enter new widget's/page's identifier and name.")).arg(copy_buf_el.c_str()).arg(work_wdg_w.c_str()).toStdString();
 	    if(d_el.substr(0,4)=="wlb_") req.setAttr("path",work_wdg_w+"/%2fwdg%2fwdg");
 	    else req.setAttr("path",work_wdg_w+"/%2fpage%2fpage");
 	    d_elp += ("/"+d_el);
 	    d_el = (d_el.substr(0,4)=="wlb_") ? "wdg_" : "pg_";
 	    t1_el = s_el.substr(3);
 	}
-	//>> Widget copy
+	// Widget copy
 	else if(s_el.substr(0,4) == "wdg_" && (d_el.substr(0,3) == "pg_" || d_el.substr(0,4) == "wlb_" ||
 	    (TSYS::pathLev(d_elp,0).substr(0,4) == "wlb_" && n_del == 2)))
 	{
 	    t_el = (QString((copy_buf_w[0] == '1') ? _("Move widget '%1' to '%2'.\n") : _("Copy widget '%1' to '%2'.\n"))+
-		_("Enter new widget's identifier and name.")).arg(copy_buf_el.c_str()).arg(work_wdg_w.c_str()).toAscii().data();
+		_("Enter new widget's identifier and name.")).arg(copy_buf_el.c_str()).arg(work_wdg_w.c_str()).toStdString();
 	    if(d_el.substr(0,4)=="wlb_") req.setAttr("path",work_wdg_w+"/%2fwdg%2fwdg");
 	    else req.setAttr("path",work_wdg_w+"/%2finclwdg%2fwdg");
 	    d_elp += ("/"+d_el);
 	    d_el = "wdg_";
 	    t1_el = s_el.substr(4);
 	}
-	//>> Direct widget to widget copy
+	// Direct widget to widget copy
 	else if(s_el.substr(0,4) == "wdg_" && d_el.substr(0,4) == "wdg_")
 	{
 	    t_el = (QString((copy_buf_w[0] == '1') ? _("Move widget '%1' to '%2'.\n") : _("Copy widget '%1' to '%2'.\n"))+
-		_("Enter new widget's identifier and name.")).arg(copy_buf_el.c_str()).arg(work_wdg_w.c_str()).toAscii().data();
+		_("Enter new widget's identifier and name.")).arg(copy_buf_el.c_str()).arg(work_wdg_w.c_str()).toStdString();
 	    req.setAttr("path",work_wdg_w+"/%2finclwdg%2fwdg");
 	    t1_el = d_el.substr(4);
 	    d_el = "wdg_";
 	}
-	//>> Copy scheme error
+	// Copy scheme error
 	else
 	{
 	    mod->postMess(mod->nodePath().c_str(),QString(_("Copy/move scheme from '%1' to '%2' is not supported.")).
 		arg(copy_buf_el.c_str()).arg(work_wdg_w.c_str()),TVision::Error,this);
 	    return;
 	}
-	//>> Prepare new widget identifier
-	//>>> Remove digits from end of new identifier
+	// Prepare new widget identifier
+	//  Remove digits from end of new identifier
 	if(wdst.empty())
 	{
 	    if(cntrIfCmd(req)) mod->postMess(req.attr("mcat").c_str(),req.text().c_str(),TVision::Error,this);
 	    else
 	    {
-		unsigned i_w = 0;
-		for(i_w = 0; i_w < req.childSize(); i_w++)
-		    if(req.childGet(i_w)->attr("id") == t1_el)
-			break;
-		if(i_w < req.childSize())
-		{
-		    int no_numb = t1_el.size()-1;
-		    while(no_numb >= 0 && t1_el[no_numb] >= '0' && t1_el[no_numb] <= '9') no_numb--;
-		    if(no_numb >= 0) t1_el = t1_el.substr(0,no_numb+1);
-		    //>>> New identifier generator
-		    unsigned i_c = 1, i_w = 0;
-		    while(i_w < req.childSize())
-			if(req.childGet(i_w)->attr("id") == t1_el+TSYS::int2str(i_c)) { i_w = 0; i_c++; }
-			else i_w++;
-		    t1_el += TSYS::int2str(i_c);
-		}
+		zLev = req.childSize();
+		for(unsigned i_w = 0; i_w < req.childSize(); )
+		    if(req.childGet(i_w)->attr("id") == t1_el) { i_w = 0; t1_el = TSYS::strLabEnum(t1_el); }
+		    else i_w++;
 	    }
 	}
-	//>> Make request dialog
+	// Make request dialog
 	dlg.setMess(t_el.c_str());
 	dlg.setId(t1_el.c_str());
-	//>> Add Link flag for copy operation
+	// Add Link flag for copy operation
 	if(copy_buf_w[0] != '1' && d_el.substr(0,4) != "prj_" && d_el.substr(0,4) != "wlb_")
 	{
 	    dlg.edLay()->addWidget(new QLabel(_("Inherit:"),&dlg), 2, 0);
@@ -1517,23 +1490,28 @@ void VisDevelop::visualItPaste( const string &wsrc, const string &wdst, const st
 	}
 	if(!wsrc.empty() || dlg.exec() == QDialog::Accepted)
 	{
-	    d_el += dlg.id().toAscii().data();
-	    string it_nm = wnm.empty() ? dlg.name().toAscii().data() : wnm;
+	    d_el += dlg.id().toStdString();
+	    string it_nm = wnm.empty() ? dlg.name().toStdString() : wnm;
 
-	    //>>> Make link
+	    //  Make link
 	    if(wInher && wInher->isChecked())
 	    {
 		QAction addAct(NULL);
 		addAct.setObjectName((s_elp+"/"+s_el).c_str());
-		visualItAdd(&addAct, QPointF(), dlg.id().toAscii().data(), it_nm, d_elp);
+		visualItAdd(&addAct, QPointF(), dlg.id().toStdString(), it_nm, d_elp);
 	    }
-	    //>>> Make copy
+	    //  Make copy
 	    else
 	    {
-		req.clear()->setName("set")->
-		    setAttr("path", "/%2fprm%2fcfg%2fcp%2fcp")->
-		    setAttr("src", s_elp+"/"+s_el)->
-		    setAttr("dst", d_elp+"/"+d_el);
+		if(d_elp == s_elp && d_el == s_el)
+		{
+		    mod->postMess(mod->nodePath().c_str(),QString(_("Try copy/move self to self for \"%1/%1\"!")).
+			arg(d_elp.c_str()).arg(d_el.c_str()),TVision::Error,this);
+		    return;
+		}
+
+		req.clear()->setName("set")->setAttr("path", "/%2fprm%2fcfg%2fcp%2fcp")->
+		    setAttr("src", s_elp+"/"+s_el)->setAttr("dst", d_elp+"/"+d_el);
 		if(cntrIfCmd(req))
 		    mod->postMess(req.attr("mcat").c_str(),req.text().c_str(),TVision::Error,this);
 		else
@@ -1549,29 +1527,32 @@ void VisDevelop::visualItPaste( const string &wsrc, const string &wdst, const st
 		    if(n_del < 2) copy_els.push_back(d_elp+"/"+d_el);
 		    else
 		    {
-			if(!last_del.empty() && last_del != d_elp)
-			    copy_els.push_back(last_del);
+			//  geomZ set to UP
+			req.clear()->setName("set")->setAttr("path",d_elp+"/"+d_el+"/%2fattr%2fgeomZ")->setText(i2s(zLev));
+			cntrIfCmd(req);
+
+			if(!last_del.empty() && last_del != d_elp) copy_els.push_back(last_del);
 			last_del = d_elp;
 		    }
 		    del_els += copy_buf_el+";";
 
-		    //> Send change request to opened for edit widget
-            	    if(!chNoWr)
-            	    {
-                	DevelWdgView *dw = work_space->findChild<DevelWdgView*>(d_elp.c_str());
-                	if(dw) dw->chRecord(*XMLNode("chldPaste").
-                		setAttr("src",s_elp+"/"+s_el)->setAttr("dst",d_elp+"/"+d_el)->setAttr("name",it_nm));
-            	    }
+		    // Send change request to opened for edit widget
+		    if(!chNoWr)
+		    {
+			DevelWdgView *dw = work_space->findChild<DevelWdgView*>(d_elp.c_str());
+			if(dw) dw->chRecord(*XMLNode("chldPaste").
+				setAttr("src",s_elp+"/"+s_el)->setAttr("dst",d_elp+"/"+d_el)->setAttr("name",it_nm));
+		    }
 		}
 	    }
 	}
     }
     if(!last_del.empty())	copy_els.push_back(last_del);
 
-    //> Send events to created widgets
+    //Send events to created widgets
     for(unsigned i_e = 0; i_e < copy_els.size(); i_e++)
 	emit modifiedItem(copy_els[i_e]);
-    //> Remove source widget
+    //Remove source widget
     if(copy_buf_w[0] == '1') 	{ visualItDel(del_els); if(wsrc.empty()) copy_buf = "0"; }
 }
 
@@ -1580,7 +1561,8 @@ void VisDevelop::editToolUpdate( )
     if(!actVisItCopy->property("wdgAddr").toString().isEmpty()) return;
     actVisItCut->setEnabled(!work_wdg.empty());
     actVisItCopy->setEnabled(!work_wdg.empty());
-    //> Src and destination elements calc
+
+    //Src and destination elements calc
     string s_elp, d_elp, s_el, d_el, t_el;
     int n_sel = 0;
     int n_del = 0;
@@ -1588,9 +1570,9 @@ void VisDevelop::editToolUpdate( )
     { s_elp += ("/"+s_el); s_el = t_el; }
     for(int off = 0; !(t_el=TSYS::pathLev(work_wdg,0,true,&off)).empty(); n_del++)
     { d_elp += ("/"+d_el); d_el = t_el; }
-    if((s_el.substr(0,4)=="prj_" || s_el.substr(0,4)=="wlb_") ||										//Project and library copy
-	    (s_el.substr(0,3)=="pg_" && (d_el.substr(0,4)=="prj_" || d_el.substr(0,3)=="pg_" || d_el.substr(0,4)=="wlb_")) ||			//Page copy
-	    (s_el.substr(0,4)=="wdg_" && (d_el.substr(0,3)=="pg_" || d_el.substr(0,4)=="wlb_" || (TSYS::pathLev(d_elp,0).substr(0,4)=="wlb_" && n_del==2))))	//Widget copy
+    if((s_el.substr(0,4) == "prj_" || s_el.substr(0,4) == "wlb_") ||										//Project and library copy
+	    (s_el.substr(0,3) == "pg_" && (d_el.substr(0,4) == "prj_" || d_el.substr(0,3) == "pg_" || d_el.substr(0,4) == "wlb_")) ||		//Page copy
+	    (s_el.substr(0,4) == "wdg_" && (d_el.substr(0,3) == "pg_" || d_el.substr(0,4) == "wlb_" || (TSYS::pathLev(d_elp,0).substr(0,4) == "wlb_" && n_del==2))))	//Widget copy
 	actVisItPaste->setEnabled(true);
     else actVisItPaste->setEnabled(false);
 }

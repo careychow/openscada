@@ -29,6 +29,8 @@
 #define PACKAGE_SITE	"http://oscada.org"
 
 //> Other system's constants
+#define OBJ_ID_SZ	"20"	// Typical object's ID size. Warning the size can cause key limit on MySQL like DB.
+#define OBJ_NM_SZ	"50"	// Typical object's NAME size.
 #define USER_FILE_LIMIT	1048576	// Loading and processing files limit into userspace
 #define STR_BUF_LEN	10000	// Length of string buffers (no string class)
 #define NSTR_BUF_LEN	100	// Length of string buffers for number
@@ -36,6 +38,7 @@
 #define STD_WAIT_TM	10	// Standard timeouts length (s), and interface wait for long
 #define STD_INTERF_TM	5	// Interface wait for long (s)
 #define BUF_ARCH_NM	"<buffer>"
+#define DB_CFG		"<cfg>"
 
 #include <unistd.h>
 #include <stdint.h>
@@ -72,6 +75,8 @@ namespace OSCADA
 //*************************************************
 class TSYS : public TCntrNode
 {
+    friend class TMess;
+
     public:
 	//Data
 	enum Code	{ PathEl, HttpURL, Html, JavaSc, SQL, Custom, base64, FormatPrint, oscdID, Bin, Reverse, ShieldSimb };
@@ -126,14 +131,14 @@ class TSYS : public TCntrNode
 	string	workDir( );
 	string	icoDir( )	{ return mIcoDir; }
 	string	modDir( )	{ return mModDir; }
-	void	setWorkDir( const string &wdir );
-	void	setIcoDir( const string &idir )	{ mIcoDir = idir; modif(); }
-	void	setModDir( const string &mdir )	{ mModDir = mdir; modif(); }
+	void	setWorkDir( const string &wdir, bool init = false );
+	void	setIcoDir( const string &idir, bool init = false );
+	void	setModDir( const string &mdir, bool init = false );
 
 	//> Config-file functions
-	string	cfgFile( )	{ return mConfFile; }
-	XMLNode	&cfgRoot( )	{ return rootN; }
-	XMLNode	*cfgNode( const string &path, bool create = false );
+	string cfgFile( )	{ return mConfFile; }
+	XMLNode &cfgRoot( )	{ return rootN; }
+	XMLNode *cfgNode( const string &path, bool create = false );
 	void	modifCfg( )	{ rootModifCnt++; }
 
 	string	workDB( )	{ return mWorkDB; }
@@ -143,7 +148,7 @@ class TSYS : public TCntrNode
 	void	setSelDB( const string &vl )	{ mSelDB = vl; }
 	bool	saveAtExit( )	{ return mSaveAtExit; }
 	void	setSaveAtExit( bool vl )	{ mSaveAtExit = vl; modif(); }
-	int 	savePeriod( )	{ return mSavePeriod; }
+	int	savePeriod( )	{ return mSavePeriod; }
 	void	setSavePeriod( int vl )		{ mSavePeriod = vmax(0,vl); modif(); }
 
 	string	optDescr( );	//print comand line options
@@ -166,18 +171,16 @@ class TSYS : public TCntrNode
 	}
 	static long HZ( );
 
-	time_t	sysTm( ) volatile	{ return mSysTm; }	//> System time fast access, from updated cell
 	static int64_t curTime( );	//> Current system time (usec)
 
 	//> Tasks control
 	void taskCreate( const string &path, int priority, void *(*start_routine)(void *), void *arg, int wtm = 5, pthread_attr_t *pAttr = NULL, bool *startSt = NULL );
 	void taskDestroy( const string &path, bool *endrunCntr = NULL, int wtm = 5, bool noSignal = false );
-	double taskUtilizTm( const string &path );
-	static bool taskEndRun( );	// Check for the task endrun by signal SIGUSR1
+	static bool taskEndRun( );      // Check for the task endrun by signal SIGUSR1
 
 	//> Sleep task for period grid <per> on ns or to cron time.
 	static int sysSleep( float tm );			//> System sleep in seconds up to nanoseconds (1e-9)
-	static void taskSleep( int64_t per, time_t cron = 0, int64_t *lag = NULL );
+	static void taskSleep( int64_t per, time_t cron = 0 );
 	static time_t cron( const string &vl, time_t base = 0 );
 
 	//> Wait event with timeout support
@@ -197,7 +200,7 @@ class TSYS : public TCntrNode
 	static double realRound( double val, int dig = 0, bool toint = false )
 	{
 	    double rez = floor(val*pow(10,dig)+0.5)/pow(10,dig);
-	    if( toint ) return floor(rez+0.5);
+	    if(toint) return floor(rez+0.5);
 	    return rez;
 	}
 	static string time2str( time_t tm, const string &format );
@@ -263,10 +266,20 @@ class TSYS : public TCntrNode
 	}
 
 	//> Endian convert
+	static uint16_t i16_LE( uint16_t in );
+	static uint32_t i32_LE( uint32_t in );
+	static uint64_t i64_LE( uint64_t in );
+	static uint16_t i16_BE( uint16_t in );
+	static uint32_t i32_BE( uint32_t in );
+	static uint64_t i64_BE( uint64_t in );
 	static float floatLE( float in );
 	static float floatLErev( float in );
 	static double doubleLE( double in );
 	static double doubleLErev( double in );
+	static float floatBE( float in );
+	static float floatBErev( float in );
+	static double doubleBE( double in );
+	static double doubleBErev( double in );
 
 	//> Reentrant commandline processing
 	string getCmdOpt( int &curPos, string *argVal = NULL );
@@ -289,6 +302,8 @@ class TSYS : public TCntrNode
 
     private:
 	//Data
+	enum MdfSYSFlds	{ MDF_WorkDir = 0x01, MDF_IcoDir = 0x02, MDF_ModDir = 0x04, MDF_LANG = 0x08 };
+
 	class STask
 	{
 	    public:
@@ -296,11 +311,9 @@ class TSYS : public TCntrNode
 		enum Flgs	{ Detached = 0x01, FinishTask = 0x02 };
 
 		//Methods
-		STask( ) : thr(0), policy(0), prior(0), tid(0), flgs(0), tm_beg(0), tm_end(0), tm_per(0), tm_pnt(0),
-		    cycleLost(0)	{ }
+		STask( ) : thr(0), policy(0), prior(0), tid(0), flgs(0), tm_beg(0), tm_end(0), tm_per(0), tm_pnt(0)		{ }
 		STask( pthread_t ithr, char ipolicy, char iprior ) :
-		    thr(ithr), policy(ipolicy), prior(iprior), tid(0), flgs(0), tm_beg(0), tm_end(0), tm_per(0), tm_pnt(0),
-		    cycleLost(0)	{ }
+		    thr(ithr), policy(ipolicy), prior(iprior), tid(0), flgs(0), tm_beg(0), tm_end(0), tm_per(0), tm_pnt(0)	{ }
 
 		//Attributes
 		string		path;
@@ -311,7 +324,7 @@ class TSYS : public TCntrNode
 		void *(*task) (void *);
 		void		*taskArg;
 		unsigned	flgs;
-		int64_t		tm_beg, tm_end, tm_per, tm_pnt, cycleLost;
+		int64_t		tm_beg, tm_end, tm_per, tm_pnt;
 	};
 
 	//Private methods
@@ -328,8 +341,6 @@ class TSYS : public TCntrNode
 
 	static void *taskWrap( void *stas );
 
-	static void *HPrTask( void *isys );
-
 	//Private attributes
 	string	mUser,		// A owner user name!
 	 	mConfFile,	// Config-file name
@@ -338,7 +349,7 @@ class TSYS : public TCntrNode
 		mIcoDir,	// Icons directory
 		mModDir;	// Modules directory
 
-	string	mWorkDB, mSelDB;// Work and selected DB
+	string	mWorkDB,mSelDB;	// Work and selected DB
 	bool	mSaveAtExit;	// Save at exit
 	int	mSavePeriod;	// Save period (s) for periodic system saving to DB
 
@@ -346,6 +357,7 @@ class TSYS : public TCntrNode
 	string	rootCfgFl;	// Root node's config-file name
 	time_t	rootFlTm;	// Root node's config-file's modify time
 	unsigned rootModifCnt;	// Root tree modify counter, used for save tree to file detect
+	unsigned sysModifFlgs;	// System fields modif flags
 
 	int	mStopSignal,	// Stop station signal
 		mSubst;		// Subsystem tree id
@@ -357,7 +369,6 @@ class TSYS : public TCntrNode
 
 	bool	mMultCPU;
 	uint64_t mSysclc;
-	volatile time_t	mSysTm;
 
 	map<string,double>	mCntrs;
 };
@@ -368,6 +379,11 @@ inline string i2s( int val, TSYS::IntView view = TSYS::Dec )	{ return TSYS::int2
 inline string u2s( unsigned val, TSYS::IntView view = TSYS::Dec ){ return TSYS::uint2str(val, view); }
 inline string ll2s( int64_t val, TSYS::IntView view = TSYS::Dec ){ return TSYS::ll2str(val, view); }
 inline string r2s( double val, int prec = 15, char tp = 'g' )	{ return TSYS::real2str(val, prec, tp); }
+inline string tm2s( time_t tm, const string &format )		{ return TSYS::time2str(tm, format); }
+inline string tm2s( double utm )				{ return TSYS::time2str(utm); }
+
+inline int s2i( const string &val )	{ return atoi(val.c_str()); }
+inline double s2r( const string &val )	{ return atof(val.c_str()); }
 
 extern TSYS *SYS;
 }

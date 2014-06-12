@@ -90,7 +90,7 @@ class Reg
 	    EndFull,	//[E]: Full end from program.
 	    MviB,	//[CRRB]: Load Boolean <B> to register <R>.
 	    MviI,	//[CRR____]: Load Integer <____> to register <R>.
-	    MviR,	//[CRR______]: Load Real <______> to register <R>.
+	    MviR,	//[CRR________]: Load Real <________> to register <R>.
 	    MviS,	//[CRRn_____]: Load String len <n> to register <R>.
 	    MviObject,	//[CRR]: Load object.
 	    MviArray,	//[CRRnrr....]: Load array from registers list.
@@ -230,11 +230,7 @@ class RegW
 
 	Reg::El &val( )				{ return el; }
 
-	//> Object's properties
-	bool propEmpty( )			{ return mPrps.empty(); }
-	int propSize( )				{ return mPrps.size(); }
-	string propGet( int id );
-	void propAdd( const string &vl );
+	vector<string> &props( )		{ return mPrps; }
 
     private:
 	Reg::Type	mTp;
@@ -272,7 +268,6 @@ class Func : public TConfig, public TFunction
 	int maxCalcTm( )		{ return max_calc_tm; }
 	string prog( )			{ return cfg("FORMULA").getS(); }
 	const string &usings( )		{ return mUsings; }
-	int  timeStamp( )		{ return mTimeStamp; }
 
 	void setName( const string &nm );
 	void setDescr( const string &dscr );
@@ -284,9 +279,6 @@ class Func : public TConfig, public TFunction
 	void del( );
 
 	void calc( TValFunc *val );
-
-	void valAtt( TValFunc *vfnc );
-        void valDet( TValFunc *vfnc );
 
 	//> Functins` list functions
 	int funcGet( const string &path );
@@ -357,11 +349,11 @@ class Func : public TConfig, public TFunction
 	//Data
 	struct ExecData
 	{
+	    unsigned	com_cnt;	//Command counter;
 	    time_t	start_tm;	//Start time
 	    unsigned char flg;		//0x01 - recursive exit stat;
 					//0x02 - break operator flag;
 					//0x04 - continue operator flag;
-					//0x08 - error flag
 	};
 
 	//Methods
@@ -377,14 +369,11 @@ class Func : public TConfig, public TFunction
 	void saveIO( );
 	void delIO( );
 
-	void exec( TValFunc *val, const uint8_t *cprg, ExecData &dt );
-
-	void workRegControl( TValFunc *vfnc, bool toFree = false );
+	void exec( TValFunc *val, RegW *reg, const uint8_t *cprg, ExecData &dt );
 
     private:
 	//Attributes
-	int	&max_calc_tm,
-		&mTimeStamp;
+	int	&max_calc_tm;
 
 	//> Parser's data
 	string		sprg, prg;	//Build prog

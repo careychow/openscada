@@ -1,7 +1,7 @@
 
 //OpenSCADA system module UI.QTCfg file: selfwidg.cpp
 /***************************************************************************
- *   Copyright (C) 2004-2008 by Roman Savochenko                           *
+ *   Copyright (C) 2004-2014 by Roman Savochenko                           *
  *   rom_as@fromru.com                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -37,7 +37,11 @@
 #include <QToolTip>
 #include <QStatusBar>
 #include <QMenu>
+#if QT_VERSION < 0x050000
 #include <QPlastiqueStyle>
+#else
+#include <QCommonStyle>
+#endif
 #include <QScrollBar>
 
 #include <tsys.h>
@@ -56,10 +60,7 @@ ImgView::ImgView( QWidget * parent, Qt::WindowFlags f, int ih_sz, int iv_sz ) :
 
 }
 
-ImgView::~ImgView( )
-{
-
-}
+ImgView::~ImgView( )	{ }
 
 bool ImgView::setImage( const string &imgdata )
 {
@@ -246,11 +247,11 @@ void LineEdit::setCfg(const QString &cfg)
 	    string	pref, suff;
 	    if( !cfg.isEmpty() )
 	    {
-		minv  = atoi(TSYS::strSepParse(cfg.toAscii().data(),0,':').c_str());
-		maxv  = atoi(TSYS::strSepParse(cfg.toAscii().data(),1,':').c_str());
-		sstep = atoi(TSYS::strSepParse(cfg.toAscii().data(),2,':').c_str());
-		pref  = TSYS::strSepParse(cfg.toAscii().data(),3,':');
-		suff  = TSYS::strSepParse(cfg.toAscii().data(),4,':');
+		minv  = atoi(TSYS::strSepParse(cfg.toStdString(),0,':').c_str());
+		maxv  = atoi(TSYS::strSepParse(cfg.toStdString(),1,':').c_str());
+		sstep = atoi(TSYS::strSepParse(cfg.toStdString(),2,':').c_str());
+		pref  = TSYS::strSepParse(cfg.toStdString(),3,':');
+		suff  = TSYS::strSepParse(cfg.toStdString(),4,':');
 	    }
 	    ((QSpinBox*)ed_fld)->setRange(minv,maxv);
 	    ((QSpinBox*)ed_fld)->setSingleStep(sstep);
@@ -265,12 +266,12 @@ void LineEdit::setCfg(const QString &cfg)
 	    int    dec = 2;
 	    if( !cfg.isEmpty() )
 	    {
-		minv  = atof(TSYS::strSepParse(cfg.toAscii().data(),0,':').c_str());
-		maxv  = atof(TSYS::strSepParse(cfg.toAscii().data(),1,':').c_str());
-		sstep = atof(TSYS::strSepParse(cfg.toAscii().data(),2,':').c_str());
-		pref  = TSYS::strSepParse(cfg.toAscii().data(),3,':');
-		suff  = TSYS::strSepParse(cfg.toAscii().data(),4,':');
-		dec   = atoi(TSYS::strSepParse(cfg.toAscii().data(),5,':').c_str());
+		minv  = atof(TSYS::strSepParse(cfg.toStdString(),0,':').c_str());
+		maxv  = atof(TSYS::strSepParse(cfg.toStdString(),1,':').c_str());
+		sstep = atof(TSYS::strSepParse(cfg.toStdString(),2,':').c_str());
+		pref  = TSYS::strSepParse(cfg.toStdString(),3,':');
+		suff  = TSYS::strSepParse(cfg.toStdString(),4,':');
+		dec   = atoi(TSYS::strSepParse(cfg.toStdString(),5,':').c_str());
 	    }
 	    ((QDoubleSpinBox*)ed_fld)->setRange(minv,maxv);
 	    ((QDoubleSpinBox*)ed_fld)->setSingleStep(sstep);
@@ -352,21 +353,6 @@ SyntxHighl::SyntxHighl(QTextDocument *parent) : QSyntaxHighlighter(parent)
 void SyntxHighl::setSnthHgl(XMLNode nd)
 {
     rules = nd;
-
-    //> Set current font settings
-    QFont rez;
-
-    char family[101]; strcpy(family,"Arial");
-    int size = 10, bold = 0, italic = 0, underline = 0, strike = 0;
-    sscanf(nd.attr("font").c_str(),"%100s %d %d %d %d %d",family,&size,&bold,&italic,&underline,&strike);
-    rez.setFamily(QString(family).replace(QRegExp("_")," "));
-    rez.setPointSize(size);
-    rez.setBold(bold);
-    rez.setItalic(italic);
-    rez.setUnderline(underline);
-    rez.setStrikeOut(strike);
-    document()->setDefaultFont(rez);
-
     rehighlight();
 }
 
@@ -410,9 +396,9 @@ void SyntxHighl::rule(XMLNode *irl, const QString &text, int off, char lev)
 
 	//> Process minimal rule
 	rl = irl->childGet(minRule);
-        kForm.setForeground(QColor(rl->attr("color").c_str()));
-        kForm.setFontWeight(atoi(rl->attr("font_weight").c_str()) ? QFont::Bold : QFont::Normal);
-        kForm.setFontItalic(atoi(rl->attr("font_italic").c_str()));
+	kForm.setForeground(QColor(rl->attr("color").c_str()));
+	kForm.setFontWeight(atoi(rl->attr("font_weight").c_str()) ? QFont::Bold : QFont::Normal);
+	kForm.setFontItalic(atoi(rl->attr("font_italic").c_str()));
 
 	if(rl->name() == "rule")
 	{
@@ -420,8 +406,8 @@ void SyntxHighl::rule(XMLNode *irl, const QString &text, int off, char lev)
 	    expr.setMinimal(atoi(rl->attr("min").c_str()));
 	    if(expr.indexIn(text,i_t) != rul_pos[minRule]) break;
 	    setFormat(rul_pos[minRule]+off, expr.matchedLength(), kForm);
-            //> Call include rules
-            if(rl->childSize()) rule(rl, text.mid(rul_pos[minRule],expr.matchedLength()), rul_pos[minRule]+off, lev+1);
+	    //> Call include rules
+	    if(rl->childSize()) rule(rl, text.mid(rul_pos[minRule],expr.matchedLength()), rul_pos[minRule]+off, lev+1);
 	    i_t = rul_pos[minRule]+expr.matchedLength();
 	}
 	else if(rl->name() == "blk")
@@ -437,21 +423,21 @@ void SyntxHighl::rule(XMLNode *irl, const QString &text, int off, char lev)
 	    QRegExp eExpr(rl->attr("end").c_str());
 	    eExpr.setMinimal(atoi(rl->attr("min").c_str()));
 	    endIndex = eExpr.indexIn(text, startBlk);
-            if(endIndex == -1 || eExpr.matchedLength() <= 0)
-            {
-        	setFormat(rul_pos[minRule]+off, (text.length()-rul_pos[minRule]), kForm);
-                sizeBlk = text.length()-startBlk;
-                i_t = text.length();
-            }
-            else
-            {
-                setFormat(rul_pos[minRule]+off, (endIndex-rul_pos[minRule]+eExpr.matchedLength()), kForm);
-                sizeBlk = endIndex-startBlk;
-                i_t = endIndex + eExpr.matchedLength();
-            }
-            //> Call include rules
-            if(rl->childSize()) rule(rl, text.mid(startBlk,sizeBlk), startBlk+off, lev+1);
-            if(endIndex == -1 || eExpr.matchedLength() <= 0)
+	    if(endIndex == -1 || eExpr.matchedLength() <= 0)
+	    {
+		setFormat(rul_pos[minRule]+off, (text.length()-rul_pos[minRule]), kForm);
+		sizeBlk = text.length()-startBlk;
+		i_t = text.length();
+	    }
+	    else
+	    {
+		setFormat(rul_pos[minRule]+off, (endIndex-rul_pos[minRule]+eExpr.matchedLength()), kForm);
+		sizeBlk = endIndex-startBlk;
+		i_t = endIndex + eExpr.matchedLength();
+	    }
+	    //> Call include rules
+	    if(rl->childSize()) rule(rl, text.mid(startBlk,sizeBlk), startBlk+off, lev+1);
+	    if(endIndex == -1 || eExpr.matchedLength() <= 0)
 		setCurrentBlockState(((minRule+1)<<(lev*8))|currentBlockState());
 	    else setCurrentBlockState(currentBlockState()& ~(0xFFFFFFFF<<(lev*8)));
 	}
@@ -476,7 +462,11 @@ TextEdit::TextEdit( QWidget *parent, const char *name, bool prev_dis ) :
     box->setSpacing(0);
 
     ed_fld = new QTextEdit(this);
+#if QT_VERSION < 0x050000
     ed_fld->setStyle(new QPlastiqueStyle());	//> Force style set for resize allow everywhere
+#else
+    ed_fld->setStyle(new QCommonStyle());	//> Force style set for resize allow everywhere
+#endif
     ed_fld->setContextMenuPolicy(Qt::CustomContextMenu);
     ed_fld->setTabStopWidth(20);
     ed_fld->setAcceptRichText(false);
@@ -486,7 +476,7 @@ TextEdit::TextEdit( QWidget *parent, const char *name, bool prev_dis ) :
     box->addWidget(ed_fld);
 
     QImage ico_t;
-    if(!ico_t.load(TUIS::icoGet("find",NULL,true).c_str())) ico_t.load(":/images/find.png");
+    if( !ico_t.load(TUIS::icoPath("find").c_str()) ) ico_t.load(":/images/find.png");
     actFind = new QAction(QPixmap::fromImage(ico_t), _("Find"), ed_fld);
     actFind->setShortcut(Qt::CTRL+Qt::Key_F);
     actFind->setShortcutContext(Qt::WidgetShortcut);
@@ -504,11 +494,11 @@ TextEdit::TextEdit( QWidget *parent, const char *name, bool prev_dis ) :
 					QDialogButtonBox::Cancel, Qt::Horizontal, this );
 	QImage ico_t;
 	but_box->button(QDialogButtonBox::Apply)->setText(_("Apply"));
-	if(!ico_t.load(TUIS::icoGet("button_ok",NULL,true).c_str())) ico_t.load(":/images/button_ok.png");
+	if(!ico_t.load(TUIS::icoPath("button_ok").c_str())) ico_t.load(":/images/button_ok.png");
 	but_box->button(QDialogButtonBox::Apply)->setIcon(QPixmap::fromImage(ico_t));
 	connect(but_box->button(QDialogButtonBox::Apply), SIGNAL(clicked()), this, SLOT(btApply()));
 	but_box->button(QDialogButtonBox::Cancel)->setText(_("Cancel"));
-	if(!ico_t.load(TUIS::icoGet("button_cancel",NULL,true).c_str())) ico_t.load(":/images/button_cancel.png");
+	if(!ico_t.load(TUIS::icoPath("button_cancel").c_str())) ico_t.load(":/images/button_cancel.png");
 	but_box->button(QDialogButtonBox::Cancel)->setIcon(QPixmap::fromImage(ico_t));
 	connect(but_box, SIGNAL(rejected()), this, SLOT(btCancel()));
 	but_box->setVisible(false);
@@ -658,7 +648,11 @@ void TextEdit::find( )
 //************************************************
 CfgTable::CfgTable( QWidget *parent ) : QTableWidget(parent)
 {
+#if QT_VERSION < 0x050000
     setStyle(new QPlastiqueStyle());	//> Force style set for resize allow everywhere
+#else
+    setStyle(new QCommonStyle());	//> Force style set for resize allow everywhere
+#endif
 }
 
 bool CfgTable::event( QEvent *e )
@@ -683,7 +677,7 @@ InputDlg::InputDlg( QWidget *parent, const QIcon &icon, const QString &mess,
 	const QString &ndlg, int with_id, int with_nm, QDialogButtonBox::StandardButtons buttons ) :
 		QDialog(parent), mId(NULL), mName(NULL)
 {
-    setMaximumSize(800,600);
+    setMaximumSize(800, 600);
     setWindowTitle(ndlg);
     setWindowIcon(icon);
     setSizeGripEnabled(true);
@@ -692,40 +686,40 @@ InputDlg::InputDlg( QWidget *parent, const QIcon &icon, const QString &mess,
     dlg_lay->setMargin(10);
     dlg_lay->setSpacing(6);
 
-    //- Icon label and text message -
+    //Icon label and text message
     QHBoxLayout *intr_lay = new QHBoxLayout;
     intr_lay->setSpacing(6);
 
     QLabel *icon_lab = new QLabel(this);
-    icon_lab->setSizePolicy( QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum) );
+    icon_lab->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum));
     icon_lab->setPixmap(icon.pixmap(48));
     intr_lay->addWidget(icon_lab);
 
-    inpLab = new QLabel(mess,this);
+    inpLab = new QLabel(mess, this);
     inpLab->setWordWrap(true);
     intr_lay->addWidget(inpLab);
     dlg_lay->addItem(intr_lay);
 
-    //- Id and name fields -
+    //Id and name fields
     ed_lay = new QGridLayout;
-    if( with_nm || with_id )
+    if(with_nm || with_id)
     {
 	ed_lay->setSpacing(6);
-	if( with_id )
+	if(with_id)
 	{
-	    mIdLab = new QLabel(_("ID:"),this);
-	    ed_lay->addWidget( mIdLab, 3, 0 );
+	    mIdLab = new QLabel(_("ID:"), this);
+	    ed_lay->addWidget(mIdLab, 3, 0);
 	    mId = new QLineEdit(this);
 	    mId->setMaxLength(with_id);
-	    ed_lay->addWidget( mId, 3, 1 );
+	    ed_lay->addWidget(mId, 3, 1);
 	}
-	if( with_nm )
+	if(with_nm)
 	{
-	    mNameLab = new QLabel(_("Name:"),this);
-	    ed_lay->addWidget( mNameLab, 4, 0 );
+	    mNameLab = new QLabel(_("Name:"), this);
+	    ed_lay->addWidget(mNameLab, 4, 0);
 	    mName = new QLineEdit(this);
 	    mName->setMaxLength(with_nm);
-	    ed_lay->addWidget( mName, 4, 1 );
+	    ed_lay->addWidget(mName, 4, 1);
 	}
     }
 
@@ -733,42 +727,42 @@ InputDlg::InputDlg( QWidget *parent, const QIcon &icon, const QString &mess,
 
     dlg_lay->addItem(ed_lay);
 
-    //- Qk and Cancel buttons -
+    //Qk and Cancel buttons
     QFrame *sep = new QFrame(this);
-    sep->setFrameShape( QFrame::HLine );
-    sep->setFrameShadow( QFrame::Raised );
-    dlg_lay->addWidget( sep );
+    sep->setFrameShape(QFrame::HLine);
+    sep->setFrameShadow(QFrame::Raised);
+    dlg_lay->addWidget(sep);
 
-    QDialogButtonBox *but_box = new QDialogButtonBox( buttons, Qt::Horizontal, this );
+    QDialogButtonBox *but_box = new QDialogButtonBox(buttons, Qt::Horizontal, this);
     QImage ico_t;
-    if( buttons & QDialogButtonBox::Ok )
+    if(buttons & QDialogButtonBox::Ok)
     {
 	but_box->button(QDialogButtonBox::Ok)->setText(_("Ok"));
-	if(!ico_t.load(TUIS::icoGet("button_ok",NULL,true).c_str())) ico_t.load(":/images/button_ok.png");
+	if(!ico_t.load(TUIS::icoPath("button_ok").c_str())) ico_t.load(":/images/button_ok.png");
 	but_box->button(QDialogButtonBox::Ok)->setIcon(QPixmap::fromImage(ico_t));
 	connect(but_box, SIGNAL(accepted()), this, SLOT(accept()));
     }
-    if( buttons & QDialogButtonBox::Cancel )
+    if(buttons & QDialogButtonBox::Cancel)
     {
 	but_box->button(QDialogButtonBox::Cancel)->setText(_("Cancel"));
-	if(!ico_t.load(TUIS::icoGet("button_cancel",NULL,true).c_str())) ico_t.load(":/images/button_cancel.png");
+	if(!ico_t.load(TUIS::icoPath("button_cancel").c_str())) ico_t.load(":/images/button_cancel.png");
 	but_box->button(QDialogButtonBox::Cancel)->setIcon(QPixmap::fromImage(ico_t));
 	connect(but_box, SIGNAL(rejected()), this, SLOT(reject()));
     }
-    dlg_lay->addWidget( but_box );
+    dlg_lay->addWidget(but_box);
 
     resize(400,150+(35*(with_nm?1:0))+(35*(with_id?1:0)));
 }
 
-QString InputDlg::id()
+QString InputDlg::id( )
 {
-    if( mId )  return mId->text();
+    if(mId)	return mId->text();
     return "";
 }
 
-QString InputDlg::name()
+QString InputDlg::name( )
 {
-    if( mName )return mName->text();
+    if(mName)	return mName->text();
     return "";
 }
 
@@ -777,19 +771,19 @@ QString InputDlg::mess( )
     return inpLab->text();
 }
 
-void InputDlg::setId(const QString &val)
+void InputDlg::setId( const QString &val )
 {
-    if( mId )  mId->setText(val);
+    if(mId)	mId->setText(val);
 }
 
-void InputDlg::setName(const QString &val)
+void InputDlg::setName( const QString &val )
 {
-    if( mName ) mName->setText(val);
+    if(mName)	mName->setText(val);
 }
 
 void InputDlg::setMess( const QString &val )
 {
-    inpLab->setText( val );
+    inpLab->setText(val);
 }
 
 void InputDlg::showEvent( QShowEvent * event )
@@ -803,21 +797,21 @@ void InputDlg::showEvent( QShowEvent * event )
 //* ReqIdNameDlg: Request node identifier and/or name *
 //*****************************************************
 ReqIdNameDlg::ReqIdNameDlg( QWidget *parent, const QIcon &icon, const QString &mess, const QString &ndlg ) :
-    InputDlg( parent, icon, mess, ndlg , 20, 500 )
+    InputDlg(parent, icon, mess, ndlg, 20, 500)
 {
-    itTpLab = new QLabel(_("Item type:"),this);
-    ed_lay->addWidget( itTpLab, 0, 0 );
+    itTpLab = new QLabel(_("Item type:"), this);
+    ed_lay->addWidget(itTpLab, 0, 0);
     itTp = new QComboBox(this);
-    itTp->setSizePolicy( QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed) );
-    ed_lay->addWidget( itTp, 0, 1 );
-    connect( itTp, SIGNAL( currentIndexChanged(int) ), this, SLOT( selectItTp(int) ) );
+    itTp->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed));
+    ed_lay->addWidget(itTp, 0, 1);
+    connect(itTp, SIGNAL(currentIndexChanged(int)), this, SLOT(selectItTp(int)));
 }
 
 string ReqIdNameDlg::target( )
 {
-    if( itTp->count() <= 0 ) return "";
+    if(itTp->count() <= 0) return "";
 
-    return itTp->itemData(itTp->currentIndex()).toString().toAscii().data();
+    return itTp->itemData(itTp->currentIndex()).toString().toStdString();
 }
 
 void ReqIdNameDlg::setTargets( const vector<string> &tgs )
@@ -830,19 +824,20 @@ void ReqIdNameDlg::setTargets( const vector<string> &tgs )
 	if(atoi(TSYS::strSepParse(tgs[i_t],4,'\n').c_str())) defPos = itTp->count()-1;
     }
     if(tgs.size()) itTp->setCurrentIndex(defPos);
-    bool tpView = !(itTp->count()==1 && itTp->itemText(0).isEmpty());
+    bool tpView = !(itTp->count() == 1 && itTp->itemText(0).isEmpty());
     itTpLab->setVisible(tpView); itTp->setVisible(tpView);
     itTp->setEnabled(itTp->count()>1);
 }
 
 void ReqIdNameDlg::selectItTp( int it )
 {
-    if( it < 0 ) return;
-    string its = itTp->itemData(it).toString().toAscii().data();
+    if(it < 0) return;
+    string its = itTp->itemData(it).toString().toStdString();
     int idSz = atoi(TSYS::strSepParse(its,0,'\n').c_str());
-    if( idSz>0 ) mId->setMaxLength(idSz);
+    if(idSz > 0) mId->setMaxLength(idSz);
     mIdLab->setVisible(idSz>=0); mId->setVisible(idSz>=0);
-    bool idm = atoi(TSYS::strSepParse(its,1,'\n').c_str());
+    int idm = atoi(TSYS::strSepParse(its,1,'\n').c_str());	//Default idm is boolean for id-mode, enable name
+    if(idm > 1)	mName->setMaxLength(idm);
     mNameLab->setVisible(idm); mName->setVisible(idm);
 }
 
@@ -879,11 +874,11 @@ DlgUser::DlgUser( QWidget *parent ) : QDialog(parent)
 						      QDialogButtonBox::Cancel, Qt::Horizontal, this );
     QImage ico_t;
     but_box->button(QDialogButtonBox::Ok)->setText(_("Ok"));
-    if(!ico_t.load(TUIS::icoGet("button_ok",NULL,true).c_str())) ico_t.load(":/images/button_ok.png");
+    if(!ico_t.load(TUIS::icoPath("button_ok").c_str())) ico_t.load(":/images/button_ok.png");
     but_box->button(QDialogButtonBox::Ok)->setIcon(QPixmap::fromImage(ico_t));
     connect(but_box, SIGNAL(accepted()), this, SLOT(accept()));
     but_box->button(QDialogButtonBox::Cancel)->setText(_("Cancel"));
-    if(!ico_t.load(TUIS::icoGet("button_cancel",NULL,true).c_str())) ico_t.load(":/images/button_cancel.png");
+    if(!ico_t.load(TUIS::icoPath("button_cancel").c_str())) ico_t.load(":/images/button_cancel.png");
     but_box->button(QDialogButtonBox::Cancel)->setIcon(QPixmap::fromImage(ico_t));
     connect(but_box, SIGNAL(rejected()), this, SLOT(reject()));
     dlg_lay->addWidget( but_box );
@@ -917,9 +912,9 @@ void DlgUser::finish( int result )
 {
     if( result )
     {
-	//- Check user -
-	if( SYS->security().at().usrPresent(user().toAscii().data()) &&
-		SYS->security().at().usrAt(user().toAscii().data()).at().auth(password().toAscii().data()) )
+	//Check user
+	if(SYS->security().at().usrPresent(user().toStdString()) &&
+		SYS->security().at().usrAt(user().toStdString()).at().auth(password().toStdString()))
 	    setResult(SelOK);
 	else setResult(SelErr);
     }

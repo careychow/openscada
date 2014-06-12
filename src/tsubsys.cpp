@@ -61,16 +61,15 @@ bool TSubSYS::modPresent( const string &name )
 
 void TSubSYS::modAdd( TModule *modul )
 {
-    if(!subModule()) throw TError(nodePath().c_str(), _("The subsystem is not modular!"));
-    if(chldPresent(m_mod,modul->modId())) return;
-    chldAdd(m_mod, modul);
-    if(mess_lev() == TMess::Debug)
-    {
-	vector<string> list;
-	modul->modInfo(list);
-	for(unsigned i_opt = 0; i_opt < list.size(); i_opt++)
-	    mess_debug(nodePath().c_str(), "-> %s: %s", _(list[i_opt].c_str()), modul->modInfo(list[i_opt]).c_str());
-    }
+    if( !subModule() ) throw TError(nodePath().c_str(),_("The subsystem is not modular!"));
+    if( chldPresent(m_mod,modul->modId()) ) return;
+    chldAdd(m_mod,modul);
+#if OSC_DEBUG >= 1
+    vector<string> list;
+    modul->modInfo( list );
+    for( unsigned i_opt = 0; i_opt < list.size(); i_opt++)
+	mess_info(nodePath().c_str(),"-> %s: %s",_(list[i_opt].c_str()),modul->modInfo(list[i_opt]).c_str());
+#endif
 }
 
 void TSubSYS::modDel( const string &name )
@@ -144,7 +143,7 @@ void TSubSYS::cntrCmdProc( XMLNode *opt )
 	TCntrNode::cntrCmdProc(opt);
 	ctrMkNode("oscada_cntr",opt,-1,"/",_("Subsystem: ")+subName(),R_R_R_);
 	ctrMkNode("branches",opt,-1,"/br","",R_R_R_);
-	if(TUIS::icoGet(subId(),NULL,true).size()) ctrMkNode("img",opt,-1,"/ico","",R_R_R_);
+	if(TUIS::icoPresent(subId()))	ctrMkNode("img",opt,-1,"/ico","",R_R_R_);
 	if(subModule())
 	{
 	    ctrMkNode("grp",opt,-1,"/br/mod_",_("Module"),R_R_R_,"root","root",1,"idm","1");

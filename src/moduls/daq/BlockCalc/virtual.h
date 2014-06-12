@@ -66,9 +66,9 @@ class Prm : public TParamContr
         //Private methods
 	void postEnable( int flag );
 
-	void vlSet( TVal &val, const TVariant &pvl );
-	void vlGet( TVal &val );
-	void vlArchMake( TVal &val );
+	void vlGet( TVal &vo );
+	void vlSet( TVal &vo, const TVariant &vl, const TVariant &pvl );
+	void vlArchMake( TVal &vo );
 
 	//Private attributes
 	TElem  v_el;				//Values elem
@@ -138,7 +138,7 @@ class Contr: public TController
 
 	int	mBl;
 	vector< AutoHD<Block> >	clc_blks;	// Calc blocks HD
-	double	mPer;
+	double	mPer, tm_calc;			// Scheme's calc time
 
 	Res	hd_res, calcRes;		// Resource for process block
 };

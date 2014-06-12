@@ -99,44 +99,43 @@ void TipContr::postEnable( int flag )
     TTipDAQ::postEnable( flag );
 
     //> Controller db structure
-    fldAdd( new TFld("PRM_BD",_("Parameters table"),TFld::String,TFld::NoFlag,"60","system") );
-    fldAdd( new TFld("FUNC",_("Controller's function"),TFld::String,TFld::NoFlag,"40") );
-    fldAdd( new TFld("SCHEDULE",_("Calculation schedule"),TFld::String,TFld::NoFlag,"100","1") );
-    fldAdd( new TFld("PRIOR",_("Calculation task priority"),TFld::Integer,TFld::NoFlag,"2","0","-1;99") );
-    fldAdd( new TFld("ITER",_("Iteration number in single calculation"),TFld::Integer,TFld::NoFlag,"2","1","1;99") );
+    fldAdd(new TFld("PRM_BD",_("Parameters table"),TFld::String,TFld::NoFlag,"60","system"));
+    fldAdd(new TFld("FUNC",_("Controller's function"),TFld::String,TFld::NoFlag,"40"));
+    fldAdd(new TFld("SCHEDULE",_("Calculation schedule"),TFld::String,TFld::NoFlag,"100","1"));
+    fldAdd(new TFld("PRIOR",_("Calculation task priority"),TFld::Integer,TFld::NoFlag,"2","0","-1;99"));
+    fldAdd(new TFld("ITER",_("Iteration number in single calculation"),TFld::Integer,TFld::NoFlag,"2","1","1;99"));
 
     //> Controller value db structure
-    val_el.fldAdd( new TFld("ID",_("IO ID"),TFld::String,TCfg::Key,"20") );
-    val_el.fldAdd( new TFld("VAL",_("IO value"),TFld::String,TFld::NoFlag,"10000") );
+    val_el.fldAdd(new TFld("ID",_("IO ID"),TFld::String,TCfg::Key,OBJ_ID_SZ));
+    val_el.fldAdd(new TFld("VAL",_("IO value"),TFld::String,TFld::NoFlag,"10000"));
 
     //> Add parameter types
     int t_prm = tpParmAdd("std","PRM_BD",_("Standard"));
-    tpPrmAt(t_prm).fldAdd( new TFld("FLD",_("Data fields"),TFld::String,TFld::FullText|TCfg::NoVal,"300") );
+    tpPrmAt(t_prm).fldAdd(new TFld("FLD",_("Data fields"),TFld::String,TFld::FullText|TCfg::NoVal,"300"));
 
     //> Lib's db structure
-    lb_el.fldAdd( new TFld("ID",_("ID"),TFld::String,TCfg::Key,"20") );
-    lb_el.fldAdd( new TFld("NAME",_("Name"),TFld::String,TCfg::TransltText,"50") );
-    lb_el.fldAdd( new TFld("DESCR",_("Description"),TFld::String,TCfg::TransltText,"300") );
-    lb_el.fldAdd( new TFld("DB",_("Data base"),TFld::String,TFld::NoFlag,"30") );
-    lb_el.fldAdd( new TFld("PROG_TR",_("Program's text translation"),TFld::Boolean,TFld::NoFlag,"1","1") );
+    lb_el.fldAdd(new TFld("ID",_("ID"),TFld::String,TCfg::Key,OBJ_ID_SZ));
+    lb_el.fldAdd(new TFld("NAME",_("Name"),TFld::String,TCfg::TransltText,OBJ_NM_SZ));
+    lb_el.fldAdd(new TFld("DESCR",_("Description"),TFld::String,TCfg::TransltText,"300"));
+    lb_el.fldAdd(new TFld("DB",_("Data base"),TFld::String,TFld::NoFlag,"30"));
+    lb_el.fldAdd(new TFld("PROG_TR",_("Program's text translation"),TFld::Boolean,TFld::NoFlag,"1","1"));
 
     //> Function's structure
-    fnc_el.fldAdd( new TFld("ID",_("ID"),TFld::String,TCfg::Key,"20") );
-    fnc_el.fldAdd( new TFld("NAME",_("Name"),TFld::String,TCfg::TransltText,"50") );
-    fnc_el.fldAdd( new TFld("DESCR",_("Description"),TFld::String,TCfg::TransltText,"300") );
-    fnc_el.fldAdd( new TFld("MAXCALCTM",_("Maximum calculate time (sec)"),TFld::Integer,TFld::NoFlag,"4","10","0;3600") );
-    fnc_el.fldAdd( new TFld("FORMULA",_("Formula"),TFld::String,TCfg::TransltText,"1000000") );
-    fnc_el.fldAdd( new TFld("TIMESTAMP",_("Date of modification"),TFld::Integer,TFld::DateTimeDec) );
+    fnc_el.fldAdd(new TFld("ID",_("ID"),TFld::String,TCfg::Key,OBJ_ID_SZ));
+    fnc_el.fldAdd(new TFld("NAME",_("Name"),TFld::String,TCfg::TransltText,OBJ_NM_SZ));
+    fnc_el.fldAdd(new TFld("DESCR",_("Description"),TFld::String,TCfg::TransltText,"300"));
+    fnc_el.fldAdd(new TFld("MAXCALCTM",_("Maximum calculate time (sec)"),TFld::Integer,TFld::NoFlag,"4","10","0;3600"));
+    fnc_el.fldAdd(new TFld("FORMULA",_("Formula"),TFld::String,TCfg::TransltText,"1000000"));
 
     //> Function's IO structure
-    fncio_el.fldAdd( new TFld("F_ID",_("Function ID"),TFld::String,TCfg::Key,"20") );
-    fncio_el.fldAdd( new TFld("ID",_("ID"),TFld::String,TCfg::Key,"20") );
-    fncio_el.fldAdd( new TFld("NAME",_("Name"),TFld::String,TCfg::TransltText,"50") );
-    fncio_el.fldAdd( new TFld("TYPE",_("Type"),TFld::Integer,TFld::NoFlag,"1") );
-    fncio_el.fldAdd( new TFld("MODE",_("Mode"),TFld::Integer,TFld::NoFlag,"1") );
-    fncio_el.fldAdd( new TFld("DEF",_("Default value"),TFld::String,TCfg::TransltText,"20") );
-    fncio_el.fldAdd( new TFld("HIDE",_("Hide"),TFld::Boolean,TFld::NoFlag,"1") );
-    fncio_el.fldAdd( new TFld("POS",_("Position"),TFld::Integer,TFld::NoFlag,"3") );
+    fncio_el.fldAdd(new TFld("F_ID",_("Function ID"),TFld::String,TCfg::Key,OBJ_ID_SZ));
+    fncio_el.fldAdd(new TFld("ID",_("ID"),TFld::String,TCfg::Key,OBJ_ID_SZ));
+    fncio_el.fldAdd(new TFld("NAME",_("Name"),TFld::String,TCfg::TransltText,OBJ_NM_SZ));
+    fncio_el.fldAdd(new TFld("TYPE",_("Type"),TFld::Integer,TFld::NoFlag,"1"));
+    fncio_el.fldAdd(new TFld("MODE",_("Mode"),TFld::Integer,TFld::NoFlag,"1"));
+    fncio_el.fldAdd(new TFld("DEF",_("Default value"),TFld::String,TCfg::TransltText,"20"));
+    fncio_el.fldAdd(new TFld("HIDE",_("Hide"),TFld::Boolean,TFld::NoFlag,"1"));
+    fncio_el.fldAdd(new TFld("POS",_("Position"),TFld::Integer,TFld::NoFlag,"3"));
 
     //> Init named constant table
     double rvl;
@@ -193,12 +192,12 @@ void TipContr::compileFuncSynthHighl( const string &lang, XMLNode &shgl )
 {
     if(lang == "JavaScript")
     {
-	shgl.setAttr("font","Courier");
 	shgl.childAdd("rule")->setAttr("expr","(\"\"|\".*[^\\\\](|\\\\{2}|\\\\{4}|\\\\{6}|\\\\{8})\")")->setAttr("min","1")->setAttr("color","darkgreen")->
 	     childAdd("rule")->setAttr("expr","\\\\([xX][a-zA-Z0-9]{2}|[0-7]{3}|.{1})")->setAttr("color","green")->setAttr("font_weight","1");
 	shgl.childAdd("blk")->setAttr("beg","/\\*")->setAttr("end","\\*/")->setAttr("color","gray")->setAttr("font_italic","1");
 	shgl.childAdd("rule")->setAttr("expr","//.*$")->setAttr("color","gray")->setAttr("font_italic","1");
-	shgl.childAdd("rule")->setAttr("expr","\\b(if|else|for|while|in|using|new|var|break|continue|return|Array|Object|RegExp)\\b")->setAttr("color","darkblue")->setAttr("font_weight","1");
+	shgl.childAdd("rule")->setAttr("expr","\\b(if|else|for|while|using|new|break|continue|return|Array|Object|RegExp)\\b")->setAttr("color","darkblue")->setAttr("font_weight","1");
+	shgl.childAdd("rule")->setAttr("expr","\\b(var|in)(?=\\s+\\w)")->setAttr("color","darkblue")->setAttr("font_weight","1");
 	shgl.childAdd("rule")->setAttr("expr","(\\?|\\:)")->setAttr("color","darkblue")->setAttr("font_weight","1");
 	shgl.childAdd("rule")->setAttr("expr","\\b(0[xX][0-9a-fA-F]*|[0-9]*\\.?[0-9]+|[0-9]*\\.?[0-9]+[eE][-+]?[0-9]*|true|false)\\b")->setAttr("color","darkorange");
 	shgl.childAdd("rule")->setAttr("expr","(\\=|\\!|\\+|\\-|\\>|\\<|\\*|\\/|\\%|\\||\\&|\\^)")->setAttr("color","darkblue")->setAttr("font_weight","1");
@@ -274,7 +273,7 @@ void TipContr::load_( )
 
 	//>> Search into DB
 	SYS->db().at().dbList(db_ls,true);
-	db_ls.push_back("<cfg>");
+	db_ls.push_back(DB_CFG);
 	for(unsigned i_db = 0; i_db < db_ls.size(); i_db++)
 	    for(int lib_cnt = 0; SYS->db().at().dataSeek(db_ls[i_db]+"."+libTable(),nodePath()+"lib",lib_cnt++,c_el); )
 	    {
@@ -330,9 +329,10 @@ void TipContr::cntrCmdProc( XMLNode *opt )
     if(opt->name() == "info")
     {
 	TTipDAQ::cntrCmdProc(opt);
-	ctrMkNode("grp",opt,-1,"/br/lib_",_("Library"),RWRWR_,"root",SDAQ_ID,2,"idm","1","idSz","20");
+	ctrMkNode("grp",opt,-1,"/br/lib_",_("Library"),RWRWR_,"root",SDAQ_ID,2,"idm",OBJ_NM_SZ,"idSz",OBJ_ID_SZ);
 	if(ctrMkNode("area",opt,1,"/libs",_("Functions' Libraries")))
-	    ctrMkNode("list",opt,-1,"/libs/lb",_("Libraries"),RWRWR_,"root",SDAQ_ID,5,"tp","br","idm","1","s_com","add,del","br_pref","lib_","idSz","20");
+	    ctrMkNode("list",opt,-1,"/libs/lb",_("Libraries"),RWRWR_,"root",SDAQ_ID,5,
+		"tp","br","idm",OBJ_NM_SZ,"s_com","add,del","br_pref","lib_","idSz",OBJ_ID_SZ);
 	return;
     }
 
@@ -406,9 +406,9 @@ string Contr::getStatus( )
     if(startStat() && !redntUse())
     {
         if(call_st)	val += TSYS::strMess(_("Call now. "));
-	if(period())	val += TSYS::strMess(_("Call by period: %s. "),TSYS::time2str(1e-3*period()).c_str());
-	else val += TSYS::strMess(_("Call next by cron '%s'. "),TSYS::time2str(TSYS::cron(cron()),"%d-%m-%Y %R").c_str());
-	val += TSYS::strMess(_("Spent time: %s."),TSYS::time2str(tm_calc).c_str());
+	if(period())	val += TSYS::strMess(_("Call by period: %s. "),tm2s(1e-3*period()).c_str());
+	else val += TSYS::strMess(_("Call next by cron '%s'. "),tm2s(TSYS::cron(cron()),"%d-%m-%Y %R").c_str());
+	val += TSYS::strMess(_("Spent time: %s."),tm2s(tm_calc).c_str());
     }
 
     return val;
@@ -642,9 +642,9 @@ void Contr::cntrCmdProc( XMLNode *opt )
 		ctrMkNode("list",opt,-1,"/fnc/io/2",_("Type"),RWRWR_,"root",SDAQ_ID,5,"tp","dec","idm","1","dest","select",
 		    "sel_id",TSYS::strMess("%d;%d;%d;%d;%d;%d",IO::Real,IO::Integer,IO::Boolean,IO::String,IO::String|(IO::FullText<<8),IO::Object).c_str(),
 		    "sel_list",_("Real;Integer;Boolean;String;Text;Object"));
-		ctrMkNode("list",opt,-1,"/fnc/io/3",_("Attribute mode"),RWRWR_,"root",SDAQ_ID,5,"tp","dec","idm","1","dest","select",
+		ctrMkNode("list",opt,-1,"/fnc/io/3",_("Mode"),RWRWR_,"root",SDAQ_ID,5,"tp","dec","idm","1","dest","select",
 		    "sel_id",TSYS::strMess("%d;%d;%d",IO::Default,IO::Output,IO::Return).c_str(),
-		    "sel_list",_("Read only;Read and Write;Read and Write"));
+		    "sel_list",_("Input;Output;Return"));
 		ctrMkNode("list",opt,-1,"/fnc/io/4",_("Value"),RWRWR_,"root",SDAQ_ID,1,"tp","str");
 	    }
 	    ctrMkNode("fld",opt,-1,"/fnc/prog",_("Program"),RWRW__,"root",SDAQ_ID,3,"tp","str","rows","10","SnthHgl","1");
@@ -843,16 +843,16 @@ void Prm::disable()
 
 Contr &Prm::owner( )	{ return (Contr&)TParamContr::owner(); }
 
-void Prm::vlSet( TVal &val, const TVariant &pvl )
+void Prm::vlSet( TVal &vo, const TVariant &vl, const TVariant &pvl )
 {
     if(!enableStat())	return;
 
     //> Send to active reserve station
-    if( owner().redntUse( ) )
+    if(owner().redntUse())
     {
-	if(val.getS(0,true) == pvl.getS()) return;
+	if(vl == pvl) return;
 	XMLNode req("set");
-	req.setAttr("path",nodePath(0,true)+"/%2fserv%2fattr")->childAdd("el")->setAttr("id",val.name())->setText(val.getS(0,true));
+	req.setAttr("path",nodePath(0,true)+"/%2fserv%2fattr")->childAdd("el")->setAttr("id",vo.name())->setText(vl.getS());
 	SYS->daq().at().rdStRequest(owner().workId(),req);
 	return;
     }
@@ -860,9 +860,9 @@ void Prm::vlSet( TVal &val, const TVariant &pvl )
     //> Direct write
     try
     {
-	int io_id = ((Contr &)owner()).ioId(val.fld().reserve());
+	int io_id = ((Contr &)owner()).ioId(vo.fld().reserve());
 	if(io_id < 0) disable();
-	else ((Contr &)owner()).set(io_id,val.get(0,true));
+	else ((Contr&)owner()).set(io_id, vl);
     }catch(TError err) { disable(); }
 }
 
